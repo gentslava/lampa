@@ -3,7 +3,6 @@ name: MultiArchDockerLatest
 on:
   push:
     branches:
-      - main
       - master
 
 jobs:
