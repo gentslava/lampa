@@ -1,14 +1,16 @@
-name: MultiArchDockerLatest
+name: Release Docker multi arch
 
 on:
   push:
     branches:
       - main
       - master
+  release:
+    types: [published]
 
 jobs:
   docker:
-    name: Build multi-arch Docker image latest.
+    name: Build multi-arch Docker images
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,15 +38,15 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set lower case owner name
-        run: |
-          echo "REG_REPO=${REPO,,}" >> ${GITHUB_ENV}
-        env:
-          REPO: '${{ github.repository }}'
-
-      - name: Check env
-        run: |
-          echo ${{ env.REG_REPO }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -52,8 +54,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/lampa:latest
-            ghcr.io/${{ env.REG_REPO }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ github.workflow }}
           cache-to: type=gha,mode=max,scope=${{ github.workflow }}
