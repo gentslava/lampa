@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: master
+    upstream: main
+    mergeMethod: merge
+  - base: main
+    upstream: yumata:main
+    mergeMethod: hardreset
