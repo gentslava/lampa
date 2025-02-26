@@ -1,6 +1,6 @@
-FROM httpd:alpine3.15
-ARG domain="localhost"
-ARG prefix="http://"
-RUN test -n "$domain" || (echo "ERROR: domain is not set" && false)
-COPY . /usr/local/apache2/htdocs/
-RUN sed -i -e "s|{domain}|$domain|" -e "s|{PREFIX}|$prefix|" /usr/local/apache2/htdocs/msx/start.json
+FROM nginx:stable-alpine
+COPY . /usr/share/nginx/html
+COPY /config/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
