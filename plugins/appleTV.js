@@ -151,6 +151,7 @@
               line-height: 1;
             }
             .applecation__network {
+              position: relative;
               display: inline-flex;
               align-items: center;
               line-height: 1;
@@ -160,7 +161,7 @@
               max-height: 0.8em;
               width: auto;
               object-fit: contain;
-              // filter: brightness(0) invert(1);
+              filter: brightness(0) invert(1);
             }
             .applecation__meta-text {
               margin-left: 1em;
