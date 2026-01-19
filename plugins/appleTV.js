@@ -81,7 +81,853 @@
           r(),
           Lampa.Template.add(
             "applecation_css",
-            "<style>\n\n/* Основной контейнер */\n.applecation {\n    transition: all .3s;\n}\n\n.applecation .full-start-new__body {\n    height: 80vh;\n}\n\n.applecation .full-start-new__right {\n    display: flex;\n    align-items: flex-end;\n}\n\n.applecation .full-start-new__title {\n    font-size: 2.5em;\n    font-weight: 700;\n    line-height: 1.2;\n    margin-bottom: 0.5em;\n    text-shadow: 0 0 .1em rgba(0, 0, 0, 0.3);\n}\n\n/* Логотип */\n.applecation__logo {\n    margin-bottom: 0.5em;\n    opacity: 0;\n    transform: translateY(20px);\n    transition: opacity 0.4s ease-out, transform 0.4s ease-out;\n}\n\n.applecation__logo.loaded {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n.applecation__logo img {\n    display: block;\n    max-width: 35vw;\n    max-height: 180px;\n    width: auto;\n    height: auto;\n    object-fit: contain;\n    object-position: left center;\n}\n\n/* Контейнер для масштабируемого контента */\n.applecation__content-wrapper {\n    font-size: 100%;\n}\n\n/* Мета информация (Тип/Жанр/поджанр) */\n.applecation__meta {\n    display: flex;\n    align-items: center;\n    color: #fff;\n    font-size: 1.1em;\n    margin-bottom: 0.5em;\n    line-height: 1;\n    opacity: 0;\n    transform: translateY(15px);\n    transition: opacity 0.4s ease-out, transform 0.4s ease-out;\n    transition-delay: 0.05s;\n}\n\n.applecation__meta.show {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n.applecation__meta-left {\n    display: flex;\n    align-items: center;\n    line-height: 1;\n}\n\n.applecation__network {\n    display: inline-flex;\n    align-items: center;\n    line-height: 1;\n}\n\n.applecation__network img {\n    display: block;\n    max-height: 0.8em;\n    width: auto;\n    object-fit: contain;\n    filter: brightness(0) invert(1);\n}\n\n.applecation__meta-text {\n    margin-left: 1em;\n    line-height: 1;\n}\n\n.applecation__meta .full-start__pg {\n    margin: 0 0 0 0.6em;\n    padding: 0.2em 0.5em;\n    font-size: 0.85em;\n    font-weight: 600;\n    border: 1.5px solid rgba(255, 255, 255, 0.4);\n    border-radius: 0.3em;\n    background: rgba(255, 255, 255, 0.1);\n    color: rgba(255, 255, 255, 0.9);\n    line-height: 1;\n    vertical-align: middle;\n}\n\n/* Рейтинги */\n.applecation__ratings {\n    display: flex;\n    align-items: center;\n    gap: 0.8em;\n    margin-bottom: 0.5em;\n    opacity: 0;\n    transform: translateY(15px);\n    transition: opacity 0.4s ease-out, transform 0.4s ease-out;\n    transition-delay: 0.08s;\n}\n\n.applecation__ratings.show {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n.applecation__ratings .rate--imdb,\n.applecation__ratings .rate--kp {\n    display: flex;\n    align-items: center;\n    gap: 0.35em;\n}\n\n.applecation__ratings svg {\n    width: 1.8em;\n    height: auto;\n    flex-shrink: 0;\n    color: rgba(255, 255, 255, 0.85);\n}\n\n.applecation__ratings .rate--kp svg {\n    width: 1.5em;\n}\n\n.applecation__ratings > div > div {\n    font-size: 0.95em;\n    font-weight: 600;\n    line-height: 1;\n    color: #fff;\n}\n\n/* Управление видимостью рейтингов через настройки */\nbody.applecation--hide-ratings .applecation__ratings {\n    display: none !important;\n}\n\n/* Расположение рейтингов - в правом нижнем углу */\nbody.applecation--ratings-corner .applecation__right {\n    gap: 1em;\n}\n\nbody.applecation--ratings-corner .applecation__ratings {\n    margin-bottom: 0;\n}\n\n/* Обертка для описания */\n.applecation__description-wrapper {\n    background-color: transparent;\n    padding: 0;\n    border-radius: 1em;\n    width: fit-content;\n    opacity: 0;\n    transform: translateY(15px);\n    transition:\n        padding 0.25s ease,\n        transform 0.25s ease,\n        opacity 0.4s ease-out;\n    transition-delay: 0.1s;\n}\n\n.applecation__description-wrapper.show {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n.applecation__description-wrapper.focus {\n  background: linear-gradient(\n    135deg,\n    rgba(255, 255, 255, 0.28),\n    rgba(255, 255, 255, 0.18)\n  );\n  padding: .15em .4em 0 .7em;\n  border-radius: 1em;\n  width: fit-content;\n\n//   box-shadow:\n//     inset 0 1px 0 rgba(255, 255, 255, 0.35),\n//     0 8px 24px rgba(0, 0, 0, 0.25);\n  box-shadow:\n    inset 0 1px 0 rgba(255, 255, 255, 0.35);\n\n  transform: scale(1.07) translateY(0);\n  \n  transition-delay: 0s;\n}\n\n/* Описание */\n.applecation__description {\n    color: rgba(255, 255, 255, 0.6);\n    font-size: 0.95em;\n    line-height: 1.5;\n    margin-bottom: 0.5em;\n    max-width: 35vw;\n    display: -webkit-box;\n    -webkit-line-clamp: 4;\n    -webkit-box-orient: vertical;\n    overflow: hidden;\n    text-overflow: ellipsis;\n}\n\n\n.focus .applecation__description {\n  color: rgba(255, 255, 255, 0.92);\n}\n\n/* Дополнительная информация (Год/длительность) */\n.applecation__info {\n    color: rgba(255, 255, 255, 0.75);\n    font-size: 1em;\n    line-height: 1.4;\n    margin-bottom: 0.5em;\n    opacity: 0;\n    transform: translateY(15px);\n    transition: opacity 0.4s ease-out, transform 0.4s ease-out;\n    transition-delay: 0.15s;\n}\n\n.applecation__info.show {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n/* Левая и правая части */\n.applecation__left {\n    flex-grow: 1;\n}\n\n.applecation__right {\n    display: flex;\n    align-items: center;\n    flex-shrink: 0;\n    position: relative;\n}\n\n/* Выравнивание по baseline если рейтинги в углу */\nbody.applecation--ratings-corner .applecation__right {\n    align-items: last baseline;\n}\n\n/* Реакции */\n.applecation .full-start-new__reactions {\n    margin: 0;\n    display: flex;\n    flex-direction: column-reverse;\n    align-items: flex-end;\n}\n\n.applecation .full-start-new__reactions > div {\n    align-self: flex-end;\n}\n\n.applecation .full-start-new__reactions:not(.focus) {\n    margin: 0;\n}\n\n.applecation .full-start-new__reactions:not(.focus) > div:not(:first-child) {\n    display: none;\n}\n\n/* Стили первой реакции (всегда видимой) */\n.applecation .full-start-new__reactions > div:first-child .reaction {\n    display: flex !important;\n    align-items: center !important;\n    background-color: rgba(0, 0, 0, 0) !important;\n    gap: 0 !important;\n}\n\n.applecation .full-start-new__reactions > div:first-child .reaction__icon {\n    background-color: rgba(0, 0, 0, 0.3) !important;\n    -webkit-border-radius: 5em;\n    -moz-border-radius: 5em;\n    border-radius: 5em;\n    padding: 0.5em;\n    width: 2.6em !important;\n    height: 2.6em !important;\n}\n\n.applecation .full-start-new__reactions > div:first-child .reaction__count {\n    font-size: 1.2em !important;\n    font-weight: 500 !important;\n}\n\n/* При фокусе реакции раскрываются вверх */\n.applecation .full-start-new__reactions.focus {\n    gap: 0.5em;\n}\n\n.applecation .full-start-new__reactions.focus > div {\n    display: block;\n}\n\n/* Скрываем стандартный rate-line (используется только для статуса) */\n.applecation .full-start-new__rate-line {\n    margin: 0;\n    height: 0;\n    overflow: hidden;\n    opacity: 0;\n    pointer-events: none;\n}\n\n/* Фон - переопределяем стандартную анимацию на fade */\n.full-start__background {\n    height: calc(100% + 6em);\n    left: 0 !important;\n    opacity: 0 !important;\n    transition: opacity 0.6s ease-out, filter 0.3s ease-out !important;\n    animation: none !important;\n    transform: none !important;\n    will-change: opacity, filter;\n}\n\n.full-start__background.loaded:not(.dim) {\n    opacity: 1 !important;\n}\n\n.full-start__background.dim {\n  filter: blur(30px);\n}\n\n/* Удерживаем opacity при загрузке нового фона */\n.full-start__background.loaded.applecation-animated {\n    opacity: 1 !important;\n}\n\nbody:not(.menu--open) .full-start__background {\n    mask-image: none;\n}\n\n/* Отключаем стандартную анимацию Lampa для фона */\nbody.advanced--animation:not(.no--animation) .full-start__background.loaded {\n    animation: none !important;\n}\n\n/* Скрываем статус для предотвращения выхода реакций за экран */\n.applecation .full-start__status {\n    display: none;\n}\n\n/* Оверлей для затемнения левого края */\n.applecation__overlay {\n    width: 90vw;\n    background: linear-gradient(to right, rgba(0, 0, 0, 0.792) 0%, rgba(0, 0, 0, 0.504) 25%, rgba(0, 0, 0, 0.264) 45%, rgba(0, 0, 0, 0.12) 55%, rgba(0, 0, 0, 0.043) 60%, rgba(0, 0, 0, 0) 65%);\n}\n\n/* Бейджи качества */\n.applecation__quality-badges {\n    display: inline-flex;\n    align-items: center;\n    gap: 0.4em;\n    margin-left: 0.6em;\n    opacity: 0;\n    transform: translateY(10px);\n    transition: opacity 0.3s ease-out, transform 0.3s ease-out;\n}\n\n.applecation__quality-badges.show {\n    opacity: 1;\n    transform: translateY(0);\n}\n\n.quality-badge {\n    display: inline-flex;\n    height: 0.8em;\n}\n\n.quality-badge svg {\n    height: 100%;\n    width: auto;\n    display: block;\n}\n\n.quality-badge--res svg {\n    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));\n}\n\n.quality-badge--dv svg,\n.quality-badge--hdr svg,\n.quality-badge--sound svg,\n.quality-badge--dub svg {\n    color: rgba(255, 255, 255, 0.85);\n    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));\n}\n\n/* Эпизоды Apple TV */\n.applecation .full-episode--small {\n    width: 20em !important;\n    height: auto !important;\n    margin-right: 1.5em !important;\n    background: none !important;\n    display: flex !important;\n    flex-direction: column !important;\n    transition: transform 0.3s !important;\n}\n\n.applecation .full-episode--small.focus {\n    transform: scale(1.02);\n}\n\n.applecation .full-episode--next .full-episode__img::after {\n  border: none !important;\n}\n\n.applecation .full-episode__img {\n    padding-bottom: 56.25% !important;\n    border-radius: 0.8em !important;\n    margin-bottom: 1em !important;\n    background-color: rgba(255,255,255,0.05) !important;\n    position: relative !important;\n    overflow: visible !important;\n}\n\n.applecation .full-episode__img img {\n    border-radius: 0.8em !important;\n    object-fit: cover !important;\n}\n\n.applecation .full-episode__time {\n    position: absolute;\n    bottom: 0.8em;\n    left: 0.8em;\n    background: rgba(0,0,0,0.6);\n    padding: 0.2em 0.5em;\n    border-radius: 0.4em;\n    font-size: 0.75em;\n    font-weight: 600;\n    color: #fff;\n    backdrop-filter: blur(5px);\n    z-index: 2;\n}\n\n.applecation .full-episode__time:empty {\n    display: none;\n}\n\n.applecation .full-episode__body {\n    position: static !important;\n    display: flex !important;\n    flex-direction: column !important;\n    background: none !important;\n    padding: 0 0.5em !important;\n    opacity: 0.6;\n    transition: opacity 0.3s;\n}\n\n.applecation .full-episode.focus .full-episode__body {\n    opacity: 1;\n}\n\n.applecation .full-episode__num {\n    font-size: 0.75em !important;\n    font-weight: 600 !important;\n    text-transform: uppercase !important;\n    color: rgba(255,255,255,0.4) !important;\n    margin-bottom: 0.2em !important;\n    letter-spacing: 0.05em !important;\n}\n\n.applecation .full-episode__name {\n    font-size: 1.1em !important;\n    font-weight: 600 !important;\n    color: #fff !important;\n    margin-bottom: 0.4em !important;\n    white-space: nowrap !important;\n    overflow: hidden !important;\n    text-overflow: ellipsis !important;\n    line-height: 1.4 !important;\n    padding-bottom: 0.1em !important;\n}\n\n.applecation .full-episode__overview {\n    font-size: 0.85em !important;\n    line-height: 1.4 !important;\n    color: rgba(255,255,255,0.5) !important;\n    display: -webkit-box !important;\n    -webkit-line-clamp: 2 !important;\n    -webkit-box-orient: vertical !important;\n    overflow: hidden !important;\n    margin-bottom: 0.6em !important;\n    height: 2.8em !important;\n}\n\n.applecation .full-episode__date {\n    font-size: 0.8em !important;\n    color: rgba(255,255,255,0.3) !important;\n}\n\n\n/* =========================================================\n   БАЗА: ничего не блюрим/не затемняем без фокуса\n   ========================================================= */\n\n.applecation .full-episode{\n  position: relative;\n  z-index: 1;\n  opacity: 1;\n  filter: none;\n\n  transition: transform .6s cubic-bezier(.16,1,.3,1);\n}\n\n/* без фокуса — вообще без эффектов */\n.applecation .full-episode:not(.focus){\n  transform: none;\n}\n\n/* фокус — мягкий “apple” подъём */\n.applecation .full-episode.focus{\n  z-index: 10;\n  transform: scale(1.03) translateY(-6px);\n}\n\n\n/* =========================================================\n   КАРТИНКА\n   ========================================================= */\n\n.applecation .full-episode__img{\n  position: relative;\n  overflow: hidden;\n  border-radius: inherit;\n\n  transition:\n    box-shadow .6s cubic-bezier(.16,1,.3,1),\n    backdrop-filter .6s cubic-bezier(.16,1,.3,1),\n    transform .6s cubic-bezier(.16,1,.3,1);\n}\n\n\n/* =========================================================\n   ЖИДКОЕ СТЕКЛО — ТОЛЬКО НА ФОКУСЕ\n   ========================================================= */\n\n.applecation .full-episode.focus .full-episode__img{\n  box-shadow:\n    0 0 0 1px rgba(255,255,255,.18),\n    0 26px 65px rgba(0,0,0,.4) !important;\n\n  -webkit-backdrop-filter: blur(14px) saturate(1.25) contrast(1.05);\n  backdrop-filter: blur(14px) saturate(1.25) contrast(1.05);\n\n  background: rgba(255,255,255,.06);\n}\n\n/* толщина стекла */\n.applecation .full-episode.focus .full-episode__img::before{\n  content: '';\n  position: absolute;\n  inset: 0;\n  border-radius: inherit;\n  pointer-events: none;\n  z-index: 2;\n\n  box-shadow:\n    inset 0 0 0 1px rgba(255,255,255,.22),\n    inset 0 0 18px rgba(255,255,255,.12),\n    inset 0 -14px 22px rgba(0,0,0,.18);\n\n  filter: blur(.35px);\n  opacity: 1;\n  transition: opacity .45s ease;\n}\n\n/* блик */\n.applecation .full-episode.focus .full-episode__img::after{\n  content: '';\n  position: absolute;\n  inset: 0;\n  border-radius: inherit;\n  pointer-events: none;\n  z-index: 3;\n\n  background:\n    radial-gradient(120% 85% at 18% 10%,\n      rgba(255,255,255,.38),\n      rgba(255,255,255,.10) 38%,\n      transparent 62%),\n    linear-gradient(135deg,\n      rgba(255,255,255,.20),\n      rgba(255,255,255,0) 52%,\n      rgba(255,255,255,.06));\n\n  mix-blend-mode: screen;\n  opacity: .95;\n\n  transition:\n    opacity .45s ease,\n    transform .65s cubic-bezier(.16,1,.3,1);\n}\n\n/* когда фокуса нет — просто не показываем слои стекла */\n.applecation .full-episode:not(.focus) .full-episode__img::before,\n.applecation .full-episode:not(.focus) .full-episode__img::after{\n  opacity: 0;\n}\n\n/* убрать старый оверлей */\n.applecation .full-episode.focus::after{\n  display: none !important;\n}\n\n\n\n.applecation .full-episode__viewed {\n    top: 0.8em !important;\n    right: 0.8em !important;\n    background: rgba(0,0,0,0.5) !important;\n    border-radius: 50% !important;\n    padding: 0.3em !important;\n    backdrop-filter: blur(10px) !important;\n}\n\n/* Статус следующей серии */\n.applecation .full-episode--next .full-episode__img:after {\n    border-radius: 0.8em !important;\n}\n\n/* Оверлей для полного описания */\n.applecation-description-overlay {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    z-index: 9999;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    opacity: 0;\n    visibility: hidden;\n    pointer-events: none;\n    transition: opacity 0.3s ease, visibility 0.3s ease;\n}\n\n.applecation-description-overlay.show {\n    opacity: 1;\n    visibility: visible;\n    pointer-events: all;\n}\n\n.applecation-description-overlay__bg {\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    -webkit-backdrop-filter: blur(100px);\n    backdrop-filter: blur(100px);\n}\n\n.applecation-description-overlay__content {\n    position: relative;\n    z-index: 1;\n    max-width: 60vw;\n    max-height: 90vh;\n    overflow-y: auto;\n}\n\n.applecation-description-overlay__logo {\n    text-align: center;\n    margin-bottom: 1.5em;\n    display: none;\n}\n\n.applecation-description-overlay__logo img {\n    max-width: 40vw;\n    max-height: 150px;\n    width: auto;\n    height: auto;\n    object-fit: contain;\n}\n\n.applecation-description-overlay__title {\n    font-size: 2em;\n    font-weight: 600;\n    margin-bottom: 1em;\n    color: #fff;\n    text-align: center;\n}\n\n.applecation-description-overlay__text {\n    font-size: 1.2em;\n    line-height: 1.6;\n    color: rgba(255, 255, 255, 0.9);\n    white-space: pre-wrap;\n    margin-bottom: 1.5em;\n}\n\n.applecation-description-overlay__details {\n    display: flex;\n    flex-wrap: wrap;\n    margin: -1em;\n}\n\n.applecation-description-overlay__details > * {\n    margin: 1em;\n}\n\n.applecation-description-overlay__info-name {\n    font-size: 1.1em;\n    margin-bottom: 0.5em;\n}\n\n.applecation-description-overlay__info-body {\n    font-size: 1.2em;\n    opacity: 0.6;\n}\n\n/* Скроллбар для описания */\n.applecation-description-overlay__content::-webkit-scrollbar {\n    width: 0.5em;\n}\n\n.applecation-description-overlay__content::-webkit-scrollbar-track {\n    background: rgba(255, 255, 255, 0.1);\n    border-radius: 1em;\n}\n\n.applecation-description-overlay__content::-webkit-scrollbar-thumb {\n    background: rgba(255, 255, 255, 0.3);\n    border-radius: 1em;\n}\n\n.applecation-description-overlay__content::-webkit-scrollbar-thumb:hover {\n    background: rgba(255, 255, 255, 0.5);\n}\n\n/* =========================================================\n   ПЕРСОНЫ (АКТЕРЫ И СЪЕМОЧНАЯ ГРУППА) - APPLE TV СТИЛЬ\n   ========================================================= */\n\n.applecation .full-person {\n    display: flex !important;\n    flex-direction: column !important;\n    align-items: center !important;\n    width: 10.7em !important;\n    background: none !important;\n    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;\n    will-change: transform;\n    -webkit-animation: none !important;\n    animation: none !important;\n    margin-left: 0;\n}\n\n.applecation .full-person.focus {\n    transform: scale(1.08) translateY(-6px) !important;\n    z-index: 10;\n}\n\n/* Фото персоны - круглое */\n.applecation .full-person__photo {\n    position: relative !important;\n    width: 9.4em !important;\n    height: 9.4em !important;\n    margin: 0 0 .3em 0 !important;\n    border-radius: 50% !important;\n    overflow: hidden !important;\n    background: rgba(255, 255, 255, 0.05) !important;\n    flex-shrink: 0 !important;\n    transition: \n        box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),\n        backdrop-filter 0.6s cubic-bezier(0.16, 1, 0.3, 1),\n        -webkit-backdrop-filter 0.6s cubic-bezier(0.16, 1, 0.3, 1),\n        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),\n        background 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;\n    will-change: transform, box-shadow, backdrop-filter;\n    -webkit-animation: none !important;\n    animation: none !important;\n}\n\n.applecation .full-person__photo img {\n    width: 100% !important;\n    height: 100% !important;\n    object-fit: cover !important;\n    border-radius: 50% !important;\n}\n\n/* Смещаем лицо только при высоком качестве (w500), так как там другой кроп у TMDB */\n.applecation.applecation--poster-high .full-person__photo img {\n    object-position: center calc(50% + 20px) !important;\n}\n\n/* Дефолтные заглушки оставляем по центру, чтобы не ломать симметрию иконок */\n.applecation .full-person__photo img[src*=\"actor.svg\"],\n.applecation .full-person__photo img[src*=\"img_broken.svg\"] {\n    object-position: center !important;\n}\n\n/* ЖИДКОЕ СТЕКЛО — БАЗОВЫЕ СЛОИ (скрыты) */\n.applecation .full-person__photo::before,\n.applecation .full-person__photo::after {\n    content: '';\n    position: absolute;\n    inset: 0;\n    border-radius: 50%;\n    pointer-events: none;\n    opacity: 0;\n    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;\n    will-change: opacity;\n}\n\n/* толщина стекла */\n.applecation .full-person__photo::before {\n    z-index: 2;\n    box-shadow:\n        inset 2px 2px 1px rgba(255, 255, 255, 0.30),\n        inset -2px -2px 2px rgba(255, 255, 255, 0.30);\n}\n\n/* ореол и блик */\n.applecation .full-person__photo::after {\n    z-index: 3;\n    background:\n        radial-gradient(circle at center,\n            transparent 58%,\n            rgba(255, 255, 255, 0.22) 75%,\n            rgba(255, 255, 255, 0.38) 90%),\n        radial-gradient(120% 85% at 18% 10%,\n            rgba(255, 255, 255, 0.35),\n            rgba(255, 255, 255, 0.10) 38%,\n            transparent 62%);\n    mix-blend-mode: screen;\n}\n\n/* ЭФФЕКТЫ ПРИ ФОКУСЕ */\n\n.applecation .full-person.focus .full-person__photo::before,\n.applecation .full-person.focus .full-person__photo::after {\n    opacity: 1;\n}\n\n.applecation .full-person.focus .full-person__photo::after {\n    opacity: 0.9;\n}\n\n/* Текстовая информация */\n.applecation .full-person__body {\n    display: flex !important;\n    flex-direction: column !important;\n    align-items: center !important;\n    text-align: center !important;\n    width: 100% !important;\n    padding: 0 0.3em !important;\n}\n\n/* Имя персоны */\n.applecation .full-person__name {\n    font-size: 1em !important;\n    font-weight: 600 !important;\n    color: #fff !important;\n    line-height: 1.3 !important;\n    width: 100% !important;\n    white-space: nowrap !important;\n    overflow: hidden !important;\n    text-overflow: ellipsis !important;\n    position: relative !important;\n}\n\n/* Бегущая строка для длинных имен */\n.applecation .full-person__name.marquee-active {\n    text-overflow: clip !important;\n    mask-image: linear-gradient(to right, #000 92%, transparent 100%);\n    -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);\n}\n\n/* При фокусе (когда строка едет) прозрачность с обеих сторон */\n.applecation .full-person.focus .full-person__name.marquee-active {\n    mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);\n    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);\n}\n\n.applecation .marquee__inner {\n    display: inline-block;\n    white-space: nowrap;\n}\n\n.applecation .marquee__inner span {\n    padding-right: 2.5em;\n    display: inline-block;\n}\n\n/* Запуск анимации при фокусе */\n.applecation .full-person.focus .full-person__name.marquee-active .marquee__inner {\n    animation: marquee var(--marquee-duration, 5s) linear infinite;\n}\n\n@keyframes marquee {\n    0% { transform: translateX(0); }\n    100% { transform: translateX(-50%); }\n}\n\n/* Роль персоны */\n.applecation .full-person__role {\n    font-size: 0.8em !important;\n    font-weight: 400 !important;\n    color: rgba(255, 255, 255, 0.5) !important;\n    line-height: 1.3 !important;\n    white-space: nowrap !important;\n    overflow: hidden !important;\n    text-overflow: ellipsis !important;\n    width: 100% !important;\n    margin-top: 0;\n}\n\n.applecation .full-person.focus .full-person__role {\n    color: rgb(255, 255, 255) !important;\n}\n</style>"
+            `<style>
+
+            /* Основной контейнер */
+            .applecation {
+              transition: all .3s;
+            }
+            .applecation .full-start-new__body {
+              height: 80vh;
+            }
+            .applecation .full-start-new__right {
+              display: flex;
+              align-items: flex-end;
+            }
+            .applecation .full-start-new__title {
+              font-size: 2.5em;
+              font-weight: 700;
+              line-height: 1.2;
+              margin-bottom: 0.5em;
+              text-shadow: 0 0 .1em rgba(0, 0, 0, 0.3);
+            }
+
+            /* Логотип */
+            .applecation__logo {
+              margin-bottom: 0.5em;
+              opacity: 0;
+              transform: translateY(20px);
+              transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            }
+            .applecation__logo.loaded {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            .applecation__logo img {
+              display: block;
+              max-width: 35vw;
+              max-height: 180px;
+              width: auto;
+              height: auto;
+              object-fit: contain;
+              object-position: left center;
+            }
+
+            /* Контейнер для масштабируемого контента */
+            .applecation__content-wrapper {
+              font-size: 100%;
+            }
+
+            /* Мета информация (Тип/Жанр/поджанр) */
+            .applecation__meta {
+              display: flex;
+              align-items: center;
+              color: #fff;
+              font-size: 1.1em;
+              margin-bottom: 0.5em;
+              line-height: 1;
+              opacity: 0;
+              transform: translateY(15px);
+              transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+              transition-delay: 0.05s;
+            }
+            .applecation__meta.show {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            .applecation__meta-left {
+              display: flex;
+              align-items: center;
+              line-height: 1;
+            }
+            .applecation__network {
+              display: inline-flex;
+              align-items: center;
+              line-height: 1;
+            }
+            .applecation__network img {
+              display: block;
+              max-height: 0.8em;
+              width: auto;
+              object-fit: contain;
+              // filter: brightness(0) invert(1);
+            }
+            .applecation__meta-text {
+              margin-left: 1em;
+              line-height: 1;
+            }
+            .applecation__meta .full-start__pg {
+              margin: 0 0 0 0.6em;
+              padding: 0.2em 0.5em;
+              font-size: 0.85em;
+              font-weight: 600;
+              border: 1.5px solid rgba(255, 255, 255, 0.4);
+              border-radius: 0.3em;
+              background: rgba(255, 255, 255, 0.1);
+              color: rgba(255, 255, 255, 0.9);
+              line-height: 1;
+              vertical-align: middle;
+
+              border: unset;
+              background: unset;
+              padding: 0;
+              opacity: 0.8;
+              margin: 0.3em 0 0 1em;
+              font-size: 0.7em;
+            }
+
+            /* Рейтинги */
+            .applecation__ratings {
+              display: flex;
+              align-items: center;
+              gap: 0.8em;
+              margin-bottom: 0.5em;
+              opacity: 0;
+              transform: translateY(15px);
+              transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+              transition-delay: 0.08s;
+            }
+            .applecation__ratings.show {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            .applecation__ratings .rate--imdb,
+            .applecation__ratings .rate--kp {
+              display: flex;
+              align-items: center;
+              gap: 0.35em;
+            }
+            .applecation__ratings svg {
+              width: 1.8em;
+              height: auto;
+              flex-shrink: 0;
+              color: rgba(255, 255, 255, 0.85);
+            }
+            .applecation__ratings .rate--kp svg {
+              width: 1.5em;
+            }
+            .applecation__ratings > div > div {
+              font-size: 0.95em;
+              font-weight: 600;
+              line-height: 1;
+              color: #fff;
+            }
+
+            /* Управление видимостью рейтингов через настройки */
+            body.applecation--hide-ratings .applecation__ratings {
+              display: none !important;
+            }
+
+            /* Расположение рейтингов - в правом нижнем углу */
+            body.applecation--ratings-corner .applecation__right {
+              gap: 1em;
+            }
+
+            body.applecation--ratings-corner .applecation__ratings {
+              margin-bottom: 0;
+            }
+
+            /* Обертка для описания */
+            .applecation__description-wrapper {
+              background-color: transparent;
+              padding: 0;
+              border-radius: 1em;
+              width: fit-content;
+              opacity: 0;
+              transform: translateY(15px);
+              transition:
+              padding 0.25s ease,
+              transform 0.25s ease,
+              opacity 0.4s ease-out;
+              transition-delay: 0.1s;
+            }
+            .applecation__description-wrapper.show {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            .applecation__description-wrapper.focus {
+              background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.28),
+                rgba(255, 255, 255, 0.18)
+              );
+              padding: .15em .4em 0 .7em;
+              border-radius: 1em;
+              width: fit-content;
+              box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.35);
+              transform: scale(1.07) translateY(0);
+              transition-delay: 0s;
+            }
+
+            /* Описание */
+            .applecation__description {
+              color: rgba(255, 255, 255, 0.6);
+              font-size: 0.95em;
+              line-height: 1.5;
+              margin-bottom: 0.5em;
+              max-width: 35vw;
+              display: -webkit-box;
+              -webkit-line-clamp: 4;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .focus .applecation__description {
+              color: rgba(255, 255, 255, 0.92);
+            }
+
+            /* Дополнительная информация (Год/длительность) */
+            .applecation__info {
+              color: rgba(255, 255, 255, 0.75);
+              font-size: 1em;
+              line-height: 1.4;
+              margin-bottom: 0.5em;
+              opacity: 0;
+              transform: translateY(15px);
+              transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+              transition-delay: 0.15s;
+            }
+            .applecation__info.show {
+              opacity: 1;
+              transform: translateY(0);
+            }
+
+            /* Левая и правая части */
+            .applecation__left {
+              flex-grow: 1;
+            }
+            .applecation__right {
+              display: flex;
+              align-items: center;
+              flex-shrink: 0;
+              position: relative;
+            }
+
+            /* Выравнивание по baseline если рейтинги в углу */
+            body.applecation--ratings-corner .applecation__right {
+              align-items: last baseline;
+            }
+
+            /* Реакции */
+            .applecation .full-start-new__reactions {
+              margin: 0;
+              display: flex;
+              align-items: flex-end;
+            }
+            .applecation .full-start-new__reactions > div {
+              align-self: flex-end;
+            }
+            .applecation .full-start-new__reactions:not(.focus) {
+              margin: 0;
+            }
+            .applecation .full-start-new__reactions:not(.focus) > div:not(:first-child) {
+              display: none;
+            }
+
+            /* Стили первой реакции (всегда видимой) */
+            .applecation .full-start-new__reactions:not(.focus) > div:first-child .reaction {
+              display: flex !important;
+              align-items: center !important;
+              background-color: rgba(0, 0, 0, 0) !important;
+              gap: 0 !important;
+            }
+            .applecation .full-start-new__reactions:not(.focus) > div:first-child .reaction__icon {
+              background-color: rgba(0, 0, 0, 0.3) !important;
+              -webkit-border-radius: 5em;
+              -moz-border-radius: 5em;
+              border-radius: 5em;
+              padding: 0.5em;
+              width: 2.6em !important;
+              height: 2.6em !important;
+            }
+            .applecation .full-start-new__reactions:not(.focus) > div:first-child .reaction__count {
+              font-size: 1.2em !important;
+              font-weight: 500 !important;
+            }
+
+            /* При фокусе реакции раскрываются вверх */
+            .applecation .full-start-new__reactions.focus > div {
+              display: block;
+            }
+
+            /* Скрываем стандартный rate-line (используется только для статуса) */
+            .applecation .full-start-new__rate-line {
+              margin: 0;
+              height: 0;
+              overflow: hidden;
+              opacity: 0;
+              pointer-events: none;
+            }
+
+            /* Фон - переопределяем стандартную анимацию на fade */
+            .full-start__background {
+              height: calc(100% + 6em);
+              left: 0 !important;
+              opacity: 0 !important;
+              transition: opacity 0.6s ease-out, filter 0.3s ease-out !important;
+              animation: none !important;
+              transform: none !important;
+              will-change: opacity, filter;
+            }
+            .full-start__background.loaded:not(.dim) {
+              opacity: 1 !important;
+            }
+            .full-start__background.dim {
+              filter: blur(30px);
+            }
+
+            /* Удерживаем opacity при загрузке нового фона */
+            .full-start__background.loaded.applecation-animated {
+              opacity: 1 !important;
+            }
+            body:not(.menu--open) .full-start__background {
+              mask-image: none;
+            }
+
+            /* Отключаем стандартную анимацию Lampa для фона */
+            body.advanced--animation:not(.no--animation) .full-start__background.loaded {
+              animation: none !important;
+            }
+
+            /* Скрываем статус для предотвращения выхода реакций за экран */
+            .applecation .full-start__status {
+              display: none;
+            }
+
+            /* Оверлей для затемнения левого края */
+            .applecation__overlay {
+              width: 90vw;
+              background: linear-gradient(to right, rgba(0, 0, 0, 0.792) 0%, rgba(0, 0, 0, 0.504) 25%, rgba(0, 0, 0, 0.264) 45%, rgba(0, 0, 0, 0.12) 55%, rgba(0, 0, 0, 0.043) 60%, rgba(0, 0, 0, 0) 65%);
+            }
+
+            /* Бейджи качества */
+            .applecation__quality-badges {
+              display: inline-flex;
+              align-items: center;
+              gap: 0.4em;
+              margin-left: 0.6em;
+              opacity: 0;
+              transform: translateY(10px);
+              transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            }
+            .applecation__quality-badges.show {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            .quality-badge {
+              display: inline-flex;
+              height: 0.8em;
+            }
+            .quality-badge svg {
+              height: 100%;
+              width: auto;
+              display: block;
+            }
+            .quality-badge--res svg {
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+            }
+            .quality-badge--dv svg,
+            .quality-badge--hdr svg,
+            .quality-badge--sound svg,
+            .quality-badge--dub svg {
+              color: rgba(255, 255, 255, 0.85);
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+            }
+
+            /* Эпизоды Apple TV */
+            .applecation .full-episode--small {
+              width: 20em !important;
+              height: auto !important;
+              margin-right: 1.5em !important;
+              background: none !important;
+              display: flex !important;
+              flex-direction: column !important;
+              transition: transform 0.3s !important;
+            }
+            .applecation .full-episode--small.focus {
+              transform: scale(1.02);
+            }
+            .applecation .full-episode--next .full-episode__img::after {
+              border: none !important;
+            }
+            .applecation .full-episode__img {
+              padding-bottom: 56.25% !important;
+              border-radius: 0.8em !important;
+              margin-bottom: 1em !important;
+              background-color: rgba(255,255,255,0.05) !important;
+              position: relative !important;
+              overflow: visible !important;
+            }
+            .applecation .full-episode__img img {
+              border-radius: 0.8em !important;
+              object-fit: cover !important;
+            }
+            .applecation .full-episode__time {
+              position: absolute;
+              bottom: 0.8em;
+              left: 0.8em;
+              background: rgba(0,0,0,0.6);
+              padding: 0.2em 0.5em;
+              border-radius: 0.4em;
+              font-size: 0.75em;
+              font-weight: 600;
+              color: #fff;
+              backdrop-filter: blur(5px);
+              z-index: 2;
+            }
+            .applecation .full-episode__time:empty {
+              display: none;
+            }
+            .applecation .full-episode__body {
+              position: static !important;
+              display: flex !important;
+              flex-direction: column !important;
+              background: none !important;
+              padding: 0 0.5em !important;
+              opacity: 0.6;
+              transition: opacity 0.3s;
+            }
+            .applecation .full-episode.focus .full-episode__body {
+              opacity: 1;
+            }
+            .applecation .full-episode__num {
+              font-size: 0.75em !important;
+              font-weight: 600 !important;
+              text-transform: uppercase !important;
+              color: rgba(255,255,255,0.4) !important;
+              margin-bottom: 0.2em !important;
+              letter-spacing: 0.05em !important;
+            }
+            .applecation .full-episode__name {
+              font-size: 1.1em !important;
+              font-weight: 600 !important;
+              color: #fff !important;
+              margin-bottom: 0.4em !important;
+              white-space: nowrap !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+              line-height: 1.4 !important;
+              padding-bottom: 0.1em !important;
+            }
+            .applecation .full-episode__overview {
+              font-size: 0.85em !important;
+              line-height: 1.4 !important;
+              color: rgba(255,255,255,0.5) !important;
+              display: -webkit-box !important;
+              -webkit-line-clamp: 2 !important;
+              -webkit-box-orient: vertical !important;
+              overflow: hidden !important;
+              margin-bottom: 0.6em !important;
+              height: 2.8em !important;
+            }
+            .applecation .full-episode__date {
+              font-size: 0.8em !important;
+              color: rgba(255,255,255,0.3) !important;
+            }
+
+            /* =========================================================
+               БАЗА: ничего не блюрим/не затемняем без фокуса
+               ========================================================= */
+
+            .applecation .full-episode{
+              position: relative;
+              z-index: 1;
+              opacity: 1;
+              filter: none;
+            
+              transition: transform .6s cubic-bezier(.16,1,.3,1);
+            }
+
+            /* без фокуса — вообще без эффектов */
+            .applecation .full-episode:not(.focus){
+              transform: none;
+            }
+
+            /* фокус — мягкий “apple” подъём */
+            .applecation .full-episode.focus{
+              z-index: 10;
+              transform: scale(1.03) translateY(-6px);
+            }
+
+            /* =========================================================
+               КАРТИНКА
+               ========================================================= */
+
+            .applecation .full-episode__img{
+              position: relative;
+              overflow: hidden;
+              border-radius: inherit;
+              transition:
+              box-shadow .6s cubic-bezier(.16,1,.3,1),
+              backdrop-filter .6s cubic-bezier(.16,1,.3,1),
+              transform .6s cubic-bezier(.16,1,.3,1);
+            }
+
+            /* =========================================================
+               ЖИДКОЕ СТЕКЛО — ТОЛЬКО НА ФОКУСЕ
+               ========================================================= */
+
+            .applecation .full-episode.focus .full-episode__img{
+              box-shadow:
+                0 0 0 1px rgba(255,255,255,.18),
+                0 26px 65px rgba(0,0,0,.4) !important;
+            
+              -webkit-backdrop-filter: blur(14px) saturate(1.25) contrast(1.05);
+              backdrop-filter: blur(14px) saturate(1.25) contrast(1.05);
+              background: rgba(255,255,255,.06);
+            }
+
+            /* толщина стекла */
+            .applecation .full-episode.focus .full-episode__img::before{
+              content: '';
+              position: absolute;
+              inset: 0;
+              border-radius: inherit;
+              pointer-events: none;
+              z-index: 2;
+
+              box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,.22),
+                inset 0 0 18px rgba(255,255,255,.12),
+                inset 0 -14px 22px rgba(0,0,0,.18);
+
+              filter: blur(.35px);
+              opacity: 1;
+              transition: opacity .45s ease;
+            }
+
+            /* блик */
+            .applecation .full-episode.focus .full-episode__img::after{
+              content: '';
+              position: absolute;
+              inset: 0;
+              border-radius: inherit;
+              pointer-events: none;
+              z-index: 3;
+
+              background:
+                radial-gradient(120% 85% at 18% 10%,
+                  rgba(255,255,255,.38),
+                  rgba(255,255,255,.10) 38%,
+                  transparent 62%),
+                linear-gradient(135deg,
+                  rgba(255,255,255,.20),
+                  rgba(255,255,255,0) 52%,
+                  rgba(255,255,255,.06));
+
+              mix-blend-mode: screen;
+              opacity: .95;
+
+              transition:
+                opacity .45s ease,
+                transform .65s cubic-bezier(.16,1,.3,1);
+            }
+
+            /* когда фокуса нет — просто не показываем слои стекла */
+            .applecation .full-episode:not(.focus) .full-episode__img::before,
+            .applecation .full-episode:not(.focus) .full-episode__img::after{
+              opacity: 0;
+            }
+
+            /* убрать старый оверлей */
+            .applecation .full-episode.focus::after{
+              display: none !important;
+            }
+            .applecation .full-episode__viewed {
+              top: 0.8em !important;
+              right: 0.8em !important;
+              background: rgba(0,0,0,0.5) !important;
+              border-radius: 50% !important;
+              padding: 0.3em !important;
+              backdrop-filter: blur(10px) !important;
+            }
+
+            /* Статус следующей серии */
+            .applecation .full-episode--next .full-episode__img:after {
+              border-radius: 0.8em !important;
+            }
+
+            /* Оверлей для полного описания */
+            .applecation-description-overlay {
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              z-index: 9999;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+            .applecation-description-overlay.show {
+              opacity: 1;
+              visibility: visible;
+              pointer-events: all;
+            }
+            .applecation-description-overlay__bg {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              -webkit-backdrop-filter: blur(100px);
+              backdrop-filter: blur(100px);
+            }
+            .applecation-description-overlay__content {
+              position: relative;
+              z-index: 1;
+              max-width: 60vw;
+              max-height: 90vh;
+              overflow-y: auto;
+            }
+            .applecation-description-overlay__logo {
+              text-align: center;
+              margin-bottom: 1.5em;
+              display: none;
+            }
+            .applecation-description-overlay__logo img {
+              max-width: 40vw;
+              max-height: 150px;
+              width: auto;
+              height: auto;
+              object-fit: contain;
+            }
+            .applecation-description-overlay__title {
+              font-size: 2em;
+              font-weight: 600;
+              margin-bottom: 1em;
+              color: #fff;
+              text-align: center;
+            }
+            .applecation-description-overlay__text {
+              font-size: 1.2em;
+              line-height: 1.6;
+              color: rgba(255, 255, 255, 0.9);
+              white-space: pre-wrap;
+              margin-bottom: 1.5em;
+            }
+            .applecation-description-overlay__details {
+              display: flex;
+              flex-wrap: wrap;
+              margin: -1em;
+            }
+            .applecation-description-overlay__details > * {
+              margin: 1em;
+            }
+            .applecation-description-overlay__info-name {
+              font-size: 1.1em;
+              margin-bottom: 0.5em;
+            }
+            .applecation-description-overlay__info-body {
+              font-size: 1.2em;
+              opacity: 0.6;
+            }
+
+            /* Скроллбар для описания */
+            .applecation-description-overlay__content::-webkit-scrollbar {
+              width: 0.5em;
+            }
+            .applecation-description-overlay__content::-webkit-scrollbar-track {
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 1em;
+            }
+            .applecation-description-overlay__content::-webkit-scrollbar-thumb {
+              background: rgba(255, 255, 255, 0.3);
+              border-radius: 1em;
+            }
+            .applecation-description-overlay__content::-webkit-scrollbar-thumb:hover {
+              background: rgba(255, 255, 255, 0.5);
+            }
+            
+            /* =========================================================
+               ПЕРСОНЫ (АКТЕРЫ И СЪЕМОЧНАЯ ГРУППА) - APPLE TV СТИЛЬ
+               ========================================================= */
+            
+            .applecation .full-person {
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              width: 10.7em !important;
+              background: none !important;
+              transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+              will-change: transform;
+              -webkit-animation: none !important;
+              animation: none !important;
+              margin-left: 0;
+            }
+            .applecation .full-person.focus {
+              transform: scale(1.08) translateY(-6px) !important;
+              z-index: 10;
+            }
+            
+            /* Фото персоны - круглое */
+            .applecation .full-person__photo {
+              position: relative !important;
+              width: 9.4em !important;
+              height: 9.4em !important;
+              margin: 0 0 .3em 0 !important;
+              border-radius: 50% !important;
+              overflow: hidden !important;
+              background: rgba(255, 255, 255, 0.05) !important;
+              flex-shrink: 0 !important;
+              transition: 
+              box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              backdrop-filter 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              -webkit-backdrop-filter 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+              will-change: transform, box-shadow, backdrop-filter;
+              -webkit-animation: none !important;
+              animation: none !important;
+            }
+            .applecation .full-person__photo img {
+              width: 100% !important;
+              height: 100% !important;
+              object-fit: cover !important;
+              border-radius: 50% !important;
+            }
+
+            /* Смещаем лицо только при высоком качестве (w500), так как там другой кроп у TMDB */
+            .applecation.applecation--poster-high .full-person__photo img {
+              object-position: center calc(50% + 20px) !important;
+            }
+
+            /* Дефолтные заглушки оставляем по центру, чтобы не ломать симметрию иконок */
+            .applecation .full-person__photo img[src*=\"actor.svg\"],
+            .applecation .full-person__photo img[src*=\"img_broken.svg\"] {
+              object-position: center !important;
+            }
+
+            /* ЖИДКОЕ СТЕКЛО — БАЗОВЫЕ СЛОИ (скрыты) */
+            .applecation .full-person__photo::before,
+            .applecation .full-person__photo::after {
+              content: '';
+              position: absolute;
+              inset: 0;
+              border-radius: 50%;
+              pointer-events: none;
+              opacity: 0;
+              transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+              will-change: opacity;
+            }
+
+            /* толщина стекла */
+            .applecation .full-person__photo::before {
+              z-index: 2;
+              box-shadow:
+              inset 2px 2px 1px rgba(255, 255, 255, 0.30),
+              inset -2px -2px 2px rgba(255, 255, 255, 0.30);
+            }
+
+            /* ореол и блик */
+            .applecation .full-person__photo::after {
+              z-index: 3;
+              background:
+              radial-gradient(circle at center,
+              transparent 58%,
+              rgba(255, 255, 255, 0.22) 75%,
+              rgba(255, 255, 255, 0.38) 90%),
+              radial-gradient(120% 85% at 18% 10%,
+              rgba(255, 255, 255, 0.35),
+              rgba(255, 255, 255, 0.10) 38%,
+              transparent 62%);
+              mix-blend-mode: screen;
+            }
+
+            /* ЭФФЕКТЫ ПРИ ФОКУСЕ */
+            .applecation .full-person.focus .full-person__photo::before,
+            .applecation .full-person.focus .full-person__photo::after {
+              opacity: 1;
+            }
+            .applecation .full-person.focus .full-person__photo::after {
+              opacity: 0.9;
+            }
+
+            /* Текстовая информация */
+            .applecation .full-person__body {
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              text-align: center !important;
+              width: 100% !important;
+              padding: 0 0.3em !important;
+            }
+
+            /* Имя персоны */
+            .applecation .full-person__name {
+              font-size: 1em !important;
+              font-weight: 600 !important;
+              color: #fff !important;
+              line-height: 1.3 !important;
+              width: 100% !important;
+              white-space: nowrap !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+              position: relative !important;
+            }
+
+            /* Бегущая строка для длинных имен */
+            .applecation .full-person__name.marquee-active {
+              text-overflow: clip !important;
+              mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+              -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+            }
+
+            /* При фокусе (когда строка едет) прозрачность с обеих сторон */
+            .applecation .full-person.focus .full-person__name.marquee-active {
+              mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);
+              -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);
+            }
+            .applecation .marquee__inner {
+              display: inline-block;
+              white-space: nowrap;
+            }
+            .applecation .marquee__inner span {
+              padding-right: 2.5em;
+              display: inline-block;
+            }
+
+            /* Запуск анимации при фокусе */
+            .applecation .full-person.focus .full-person__name.marquee-active .marquee__inner {
+              animation: marquee var(--marquee-duration, 5s) linear infinite;
+            }
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+
+            /* Роль персоны */
+            .applecation .full-person__role {
+              font-size: 0.8em !important;
+              font-weight: 400 !important;
+              color: rgba(255, 255, 255, 0.5) !important;
+              line-height: 1.3 !important;
+              white-space: nowrap !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+              width: 100% !important;
+              margin-top: 0;
+            }
+            .applecation .full-person.focus .full-person__role {
+              color: rgb(255, 255, 255) !important;
+            }
+            </style>`
           ),
           $("body").append(Lampa.Template.get("applecation_css", {}, !0)),
           void 0 === Lampa.Storage.get("applecation_show_ratings") &&
@@ -1357,24 +2203,216 @@
       e = parseInt(Lampa.Storage.get("applecation_text_scale", "100")),
       t = parseInt(Lampa.Storage.get("applecation_spacing_scale", "100"));
     $('style[data-id="applecation_scales"]').remove();
-    const a = `\n            <style data-id="applecation_scales">\n                /* Масштаб логотипа */\n                \n                .applecation .applecation__logo img {\n                    max-width: ${(35 * n) / 100}vw !important;\n                    max-height: ${(180 * n) / 100}px !important;\n                }\n\n                /* Масштаб текста и мета-информации */\n                .applecation .applecation__content-wrapper {\n                    font-size: ${e}% !important;\n                }\n\n                /* Отступы между элементами */\n                .applecation .full-start-new__title {\n                    margin-bottom: ${(0.5 * t) / 100}em !important;\n                }\n                \n                .applecation .applecation__meta {\n                    margin-bottom: ${(0.5 * t) / 100}em !important;\n                }\n                \n                .applecation .applecation__ratings {\n                    margin-bottom: ${(0.5 * t) / 100}em !important;\n                }\n                \n                .applecation .applecation__description {\n                    max-width: ${(35 * e) / 100}vw !important;\n                    margin-bottom: ${(0.5 * t) / 100}em !important;\n                }\n                \n                .applecation .applecation__info {\n                    margin-bottom: ${(0.5 * t) / 100}em !important;\n                }\n            </style>\n        `;
+    const a = `
+    <style data-id="applecation_scales">
+        /* Масштаб логотипа */
+        
+        .applecation .applecation__logo img {
+            max-width: ${(35 * n) / 100}vw !important;
+            max-height: ${(180 * n) / 100}px !important;
+        }
+            
+        /* Масштаб текста и мета-информации */
+        .applecation .applecation__content-wrapper {
+            font-size: ${e}% !important;
+        }
+            
+        /* Отступы между элементами */
+        .applecation .full-start-new__title {
+            margin-bottom: ${(0.5 * t) / 100}em !important;
+        }
+        
+        .applecation .applecation__meta {
+            margin-bottom: ${(0.5 * t) / 100}em !important;
+        }
+        
+        .applecation .applecation__ratings {
+            margin-bottom: ${(0.5 * t) / 100}em !important;
+        }
+        
+        .applecation .applecation__description {
+            max-width: ${(35 * e) / 100}vw !important;
+            margin-bottom: ${(0.5 * t) / 100}em !important;
+        }
+        
+        .applecation .applecation__info {
+            margin-bottom: ${(0.5 * t) / 100}em !important;
+        }
+    </style>
+    `;
     $("body").append(a);
   }
   function r() {
     Lampa.Template.add(
       "applecation_overlay",
-      '\n            <div class="applecation-description-overlay">\n                <div class="applecation-description-overlay__bg"></div>\n                <div class="applecation-description-overlay__content selector">\n                    <div class="applecation-description-overlay__logo"></div>\n                    <div class="applecation-description-overlay__title">{title}</div>\n                    <div class="applecation-description-overlay__text">{text}</div>\n                    <div class="applecation-description-overlay__details">\n                        <div class="applecation-description-overlay__info">\n                            <div class="applecation-description-overlay__info-name">#{full_date_of_release}</div>\n                            <div class="applecation-description-overlay__info-body">{relise}</div>\n                        </div>\n                        <div class="applecation-description-overlay__info applecation--budget">\n                            <div class="applecation-description-overlay__info-name">#{full_budget}</div>\n                            <div class="applecation-description-overlay__info-body">{budget}</div>\n                        </div>\n                        <div class="applecation-description-overlay__info applecation--countries">\n                            <div class="applecation-description-overlay__info-name">#{full_countries}</div>\n                            <div class="applecation-description-overlay__info-body">{countries}</div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        '
+      `<div class="applecation-description-overlay">
+        <div class="applecation-description-overlay__bg"></div>
+        <div class="applecation-description-overlay__content selector">
+          <div class="applecation-description-overlay__logo"></div>
+          <div class="applecation-description-overlay__title">{title}</div>
+          <div class="applecation-description-overlay__text">{text}</div>
+          <div class="applecation-description-overlay__details">
+            <div class="applecation-description-overlay__info">
+                <div class="applecation-description-overlay__info-name">#{full_date_of_release}</div>
+                <div class="applecation-description-overlay__info-body">{relise}</div>
+            </div>
+            <div class="applecation-description-overlay__info applecation--budget">
+                <div class="applecation-description-overlay__info-name">#{full_budget}</div>
+                <div class="applecation-description-overlay__info-body">{budget}</div>
+            </div>
+            <div class="applecation-description-overlay__info applecation--countries">
+                <div class="applecation-description-overlay__info-name">#{full_countries}</div>
+                <div class="applecation-description-overlay__info-body">{countries}</div>
+            </div>
+          </div>
+        </div>
+      </div>`
     );
   }
   function l() {
     const n = Lampa.Storage.get("applecation_ratings_position", "card"),
-      e =
-        '\x3c!-- Рейтинги --\x3e\n                    <div class="applecation__ratings">\n                        <div class="rate--imdb hide">\n                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none">\n                                <path fill="currentColor" d="M4 7c-1.103 0-2 .897-2 2v6.4c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2H4Zm1.4 2.363h1.275v5.312H5.4V9.362Zm1.962 0H9l.438 2.512.287-2.512h1.75v5.312H10.4v-3l-.563 3h-.8l-.512-3v3H7.362V9.362Zm8.313 0H17v1.2c.16-.16.516-.363.875-.363.36.04.84.283.8.763v3.075c0 .24-.075.404-.275.524-.16.04-.28.075-.6.075-.32 0-.795-.196-.875-.237-.08-.04-.163.275-.163.275h-1.087V9.362Zm-3.513.037H13.6c.88 0 1.084.078 1.325.237.24.16.35.397.35.838v3.2c0 .32-.15.563-.35.762-.2.2-.484.288-1.325.288h-1.438V9.4Zm1.275.8v3.563c.2 0 .488.04.488-.2v-3.126c0-.28-.247-.237-.488-.237Zm3.763.675c-.12 0-.2.08-.2.2v2.688c0 .159.08.237.2.237.12 0 .2-.117.2-.238l-.037-2.687c0-.12-.043-.2-.163-.2Z"/>\n                            </svg>\n                            <div>0.0</div>\n                        </div>\n                        <div class="rate--kp hide">\n                            <svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="none">\n                                <path d="M96.5 20 66.1 75.733V20H40.767v152H66.1v-55.733L96.5 172h35.467C116.767 153.422 95.2 133.578 80 115c28.711 16.889 63.789 35.044 92.5 51.933v-30.4C148.856 126.4 108.644 115.133 85 105c23.644 3.378 63.856 7.889 87.5 11.267v-30.4L85 90c27.022-11.822 60.478-22.711 87.5-34.533v-30.4C143.789 41.956 108.711 63.11 80 80l51.967-60z" style="fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"/>\n                            </svg>\n                            <div>0.0</div>\n                        </div>\n                    </div>',
-      t = `<div class="full-start-new applecation">\n        <div class="full-start-new__body">\n            <div class="full-start-new__left hide">\n                <div class="full-start-new__poster">\n                    <img class="full-start-new__img full--poster" />\n                </div>\n            </div>\n\n            <div class="full-start-new__right">\n                <div class="applecation__left">\n                    <div class="applecation__logo"></div>\n                    \n                    <div class="applecation__content-wrapper">\n                        <div class="full-start-new__title" style="display: none;">{title}</div>\n                        \n                        <div class="applecation__meta">\n                            <div class="applecation__meta-left">\n                                <span class="applecation__network"></span>\n                                <span class="applecation__meta-text"></span>\n                                <div class="full-start__pg hide"></div>\n                            </div>\n                        </div>\n                        \n                        ${"card" === n ? e : ""}\n                        \n                        <div class="applecation__description-wrapper">\n                            <div class="applecation__description"></div>\n                        </div>\n                        <div class="applecation__info"></div>\n                    </div>\n                    \n                    \x3c!-- Скрытые оригинальные элементы --\x3e\n                    <div class="full-start-new__head" style="display: none;"></div>\n                    <div class="full-start-new__details" style="display: none;"></div>\n\n                    <div class="full-start-new__buttons">\n                        <div class="full-start__button selector button--play">\n                            <svg width="28" height="29" viewBox="0 0 28 29" fill="none" xmlns="http://www.w3.org/2000/svg">\n                                <circle cx="14" cy="14.5" r="13" stroke="currentColor" stroke-width="2.7"/>\n                                <path d="M18.0739 13.634C18.7406 14.0189 18.7406 14.9811 18.0739 15.366L11.751 19.0166C11.0843 19.4015 10.251 18.9204 10.251 18.1506L10.251 10.8494C10.251 10.0796 11.0843 9.5985 11.751 9.9834L18.0739 13.634Z" fill="currentColor"/>\n                            </svg>\n                            <span>#{title_watch}</span>\n                        </div>\n\n                        <div class="full-start__button selector button--book">\n                            <svg width="21" height="32" viewBox="0 0 21 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n                                <path d="M2 1.5H19C19.2761 1.5 19.5 1.72386 19.5 2V27.9618C19.5 28.3756 19.0261 28.6103 18.697 28.3595L12.6212 23.7303C11.3682 22.7757 9.63183 22.7757 8.37885 23.7303L2.30302 28.3595C1.9739 28.6103 1.5 28.3756 1.5 27.9618V2C1.5 1.72386 1.72386 1.5 2 1.5Z" stroke="currentColor" stroke-width="2.5"/>\n                            </svg>\n                            <span>#{settings_input_links}</span>\n                        </div>\n\n                        <div class="full-start__button selector button--reaction">\n                            <svg width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">\n                                <path d="M37.208 10.9742C37.1364 10.8013 37.0314 10.6441 36.899 10.5117C36.7666 10.3794 36.6095 10.2744 36.4365 10.2028L12.0658 0.108375C11.7166 -0.0361828 11.3242 -0.0361227 10.9749 0.108542C10.6257 0.253206 10.3482 0.530634 10.2034 0.879836L0.108666 25.2507C0.0369593 25.4236 3.37953e-05 25.609 2.3187e-08 25.7962C-3.37489e-05 25.9834 0.0368249 26.1688 0.108469 26.3418C0.180114 26.5147 0.28514 26.6719 0.417545 26.8042C0.54995 26.9366 0.707139 27.0416 0.880127 27.1131L17.2452 33.8917C17.5945 34.0361 17.9869 34.0361 18.3362 33.8917L29.6574 29.2017C29.8304 29.1301 29.9875 29.0251 30.1199 28.8928C30.2523 28.7604 30.3573 28.6032 30.4289 28.4303L37.2078 12.065C37.2795 11.8921 37.3164 11.7068 37.3164 11.5196C37.3165 11.3325 37.2796 11.1471 37.208 10.9742ZM20.425 29.9407L21.8784 26.4316L25.3873 27.885L20.425 29.9407ZM28.3407 26.0222L21.6524 23.252C21.3031 23.1075 20.9107 23.1076 20.5615 23.2523C20.2123 23.3969 19.9348 23.6743 19.79 24.0235L17.0194 30.7123L3.28783 25.0247L12.2918 3.28773L34.0286 12.2912L28.3407 26.0222Z" fill="currentColor"/>\n                                <path d="M25.3493 16.976L24.258 14.3423L16.959 17.3666L15.7196 14.375L13.0859 15.4659L15.4161 21.0916L25.3493 16.976Z" fill="currentColor"/>\n                            </svg>\n                            <span>#{title_reactions}</span>\n                        </div>\n\n                        <div class="full-start__button selector button--subscribe hide">\n                            <svg width="25" height="30" viewBox="0 0 25 30" fill="none" xmlns="http://www.w3.org/2000/svg">\n                                <path d="M6.01892 24C6.27423 27.3562 9.07836 30 12.5 30C15.9216 30 18.7257 27.3562 18.981 24H15.9645C15.7219 25.6961 14.2632 27 12.5 27C10.7367 27 9.27804 25.6961 9.03542 24H6.01892Z" fill="currentColor"/>\n                                <path d="M3.81972 14.5957V10.2679C3.81972 5.41336 7.7181 1.5 12.5 1.5C17.2819 1.5 21.1803 5.41336 21.1803 10.2679V14.5957C21.1803 15.8462 21.5399 17.0709 22.2168 18.1213L23.0727 19.4494C24.2077 21.2106 22.9392 23.5 20.9098 23.5H4.09021C2.06084 23.5 0.792282 21.2106 1.9273 19.4494L2.78317 18.1213C3.46012 17.0709 3.81972 15.8462 3.81972 14.5957Z" stroke="currentColor" stroke-width="2.5"/>\n                            </svg>\n                            <span>#{title_subscribe}</span>\n                        </div>\n\n                        <div class="full-start__button selector button--options">\n                            <svg width="38" height="10" viewBox="0 0 38 10" fill="none" xmlns="http://www.w3.org/2000/svg">\n                                <circle cx="4.88968" cy="4.98563" r="4.75394" fill="currentColor"/>\n                                <circle cx="18.9746" cy="4.98563" r="4.75394" fill="currentColor"/>\n                                <circle cx="33.0596" cy="4.98563" r="4.75394" fill="currentColor"/>\n                            </svg>\n                        </div>\n                    </div>\n                </div>\n\n                <div class="applecation__right">\n                    <div class="full-start-new__reactions selector">\n                        <div>#{reactions_none}</div>\n                    </div>\n                    \n                    ${"corner" === n ? e : ""}\n\n                    \x3c!-- Скрытый элемент для совместимости (предотвращает выход реакций за экран) --\x3e\n                    <div class="full-start-new__rate-line">\n                        <div class="full-start__status hide"></div>\n                    </div>\n                    \n                    \x3c!-- Пустой маркер для предотвращения вставки элементов от modss.js --\x3e\n                    <div class="rating--modss" style="display: none;"></div>\n                </div>\n            </div>\n        </div>\n\n        <div class="hide buttons--container">\n            <div class="full-start__button view--torrent hide">\n                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50px" height="50px">\n                    <path d="M25,2C12.317,2,2,12.317,2,25s10.317,23,23,23s23-10.317,23-23S37.683,2,25,2z M40.5,30.963c-3.1,0-4.9-2.4-4.9-2.4 S34.1,35,27,35c-1.4,0-3.6-0.837-3.6-0.837l4.17,9.643C26.727,43.92,25.874,44,25,44c-2.157,0-4.222-0.377-6.155-1.039L9.237,16.851 c0,0-0.7-1.2,0.4-1.5c1.1-0.3,5.4-1.2,5.4-1.2s1.475-0.494,1.8,0.5c0.5,1.3,4.063,11.112,4.063,11.112S22.6,29,27.4,29 c4.7,0,5.9-3.437,5.7-3.937c-1.2-3-4.993-11.862-4.993-11.862s-0.6-1.1,0.8-1.4c1.4-0.3,3.8-0.7,3.8-0.7s1.105-0.163,1.6,0.8 c0.738,1.437,5.193,11.262,5.193,11.262s1.1,2.9,3.3,2.9c0.464,0,0.834-0.046,1.152-0.104c-0.082,1.635-0.348,3.221-0.817,4.722 C42.541,30.867,41.756,30.963,40.5,30.963z" fill="currentColor"/>\n                </svg>\n                <span>#{full_torrents}</span>\n            </div>\n\n            <div class="full-start__button selector view--trailer">\n                <svg height="70" viewBox="0 0 80 70" fill="none" xmlns="http://www.w3.org/2000/svg">\n                    <path fill-rule="evenodd" clip-rule="evenodd" d="M71.2555 2.08955C74.6975 3.2397 77.4083 6.62804 78.3283 10.9306C80 18.7291 80 35 80 35C80 35 80 51.2709 78.3283 59.0694C77.4083 63.372 74.6975 66.7603 71.2555 67.9104C65.0167 70 40 70 40 70C40 70 14.9833 70 8.74453 67.9104C5.3025 66.7603 2.59172 63.372 1.67172 59.0694C0 51.2709 0 35 0 35C0 35 0 18.7291 1.67172 10.9306C2.59172 6.62804 5.3025 3.2395 8.74453 2.08955C14.9833 0 40 0 40 0C40 0 65.0167 0 71.2555 2.08955ZM55.5909 35.0004L29.9773 49.5714V20.4286L55.5909 35.0004Z" fill="currentColor"></path>\n                </svg>\n                <span>#{full_trailers}</span>\n            </div>\n        </div>\n    </div>`;
+      e = `\x3c!-- Рейтинги --\x3e
+        <div class="applecation__ratings">
+          <div class="rate--imdb hide">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none">
+                <path fill="currentColor" d="M4 7c-1.103 0-2 .897-2 2v6.4c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2H4Zm1.4 2.363h1.275v5.312H5.4V9.362Zm1.962 0H9l.438 2.512.287-2.512h1.75v5.312H10.4v-3l-.563 3h-.8l-.512-3v3H7.362V9.362Zm8.313 0H17v1.2c.16-.16.516-.363.875-.363.36.04.84.283.8.763v3.075c0 .24-.075.404-.275.524-.16.04-.28.075-.6.075-.32 0-.795-.196-.875-.237-.08-.04-.163.275-.163.275h-1.087V9.362Zm-3.513.037H13.6c.88 0 1.084.078 1.325.237.24.16.35.397.35.838v3.2c0 .32-.15.563-.35.762-.2.2-.484.288-1.325.288h-1.438V9.4Zm1.275.8v3.563c.2 0 .488.04.488-.2v-3.126c0-.28-.247-.237-.488-.237Zm3.763.675c-.12 0-.2.08-.2.2v2.688c0 .159.08.237.2.237.12 0 .2-.117.2-.238l-.037-2.687c0-.12-.043-.2-.163-.2Z"/>
+            </svg>
+            <div>0.0</div>
+          </div>
+          <div class="rate--kp hide">
+            <svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" fill="none">
+                <path d="M96.5 20 66.1 75.733V20H40.767v152H66.1v-55.733L96.5 172h35.467C116.767 153.422 95.2 133.578 80 115c28.711 16.889 63.789 35.044 92.5 51.933v-30.4C148.856 126.4 108.644 115.133 85 105c23.644 3.378 63.856 7.889 87.5 11.267v-30.4L85 90c27.022-11.822 60.478-22.711 87.5-34.533v-30.4C143.789 41.956 108.711 63.11 80 80l51.967-60z" style="fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10"/>
+            </svg>
+            <div>0.0</div>
+          </div>
+        </div>`,
+      t = `<div class="full-start-new applecation">
+        <div class="full-start-new__body">
+          <div class="full-start-new__left hide">
+            <div class="full-start-new__poster">
+              <img class="full-start-new__img full--poster" />
+            </div>
+          </div>
+          
+          <div class="full-start-new__right">
+            <div class="applecation__left">
+              <div class="applecation__logo"></div>
+              
+              <div class="applecation__content-wrapper">
+                <div class="full-start-new__title" style="display: none;">{title}</div>
+                
+                <div class="applecation__meta">
+                  <div class="applecation__meta-left">
+                    <span class="applecation__network"></span>
+                    <span class="applecation__meta-text"></span>
+                    <div class="full-start__pg hide"></div>
+                  </div>
+                </div>
+                
+                ${"card" === n ? e : ""}
+                
+                <div class="applecation__description-wrapper">
+                    <div class="applecation__description"></div>
+                </div>
+                <div class="applecation__info"></div>
+              </div>
+              
+              \x3c!-- Скрытые оригинальные элементы --\x3e
+              <div class="full-start-new__head" style="display: none;"></div>
+              <div class="full-start-new__details" style="display: none;"></div>
+              
+              <div class="full-start-new__buttons">
+                <div class="full-start__button selector button--play">
+                  <svg width="28" height="29" viewBox="0 0 28 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="14" cy="14.5" r="13" stroke="currentColor" stroke-width="2.7"/>
+                    <path d="M18.0739 13.634C18.7406 14.0189 18.7406 14.9811 18.0739 15.366L11.751 19.0166C11.0843 19.4015 10.251 18.9204 10.251 18.1506L10.251 10.8494C10.251 10.0796 11.0843 9.5985 11.751 9.9834L18.0739 13.634Z" fill="currentColor"/>
+                  </svg>
+                  <span>#{title_watch}</span>
+                </div>
+                  
+                <div class="full-start__button selector button--book">
+                  <svg width="21" height="32" viewBox="0 0 21 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 1.5H19C19.2761 1.5 19.5 1.72386 19.5 2V27.9618C19.5 28.3756 19.0261 28.6103 18.697 28.3595L12.6212 23.7303C11.3682 22.7757 9.63183 22.7757 8.37885 23.7303L2.30302 28.3595C1.9739 28.6103 1.5 28.3756 1.5 27.9618V2C1.5 1.72386 1.72386 1.5 2 1.5Z" stroke="currentColor" stroke-width="2.5"/>
+                  </svg>
+                  <span>#{settings_input_links}</span>
+                </div>
+                  
+                <div class="full-start__button selector button--reaction">
+                  <svg width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M37.208 10.9742C37.1364 10.8013 37.0314 10.6441 36.899 10.5117C36.7666 10.3794 36.6095 10.2744 36.4365 10.2028L12.0658 0.108375C11.7166 -0.0361828 11.3242 -0.0361227 10.9749 0.108542C10.6257 0.253206 10.3482 0.530634 10.2034 0.879836L0.108666 25.2507C0.0369593 25.4236 3.37953e-05 25.609 2.3187e-08 25.7962C-3.37489e-05 25.9834 0.0368249 26.1688 0.108469 26.3418C0.180114 26.5147 0.28514 26.6719 0.417545 26.8042C0.54995 26.9366 0.707139 27.0416 0.880127 27.1131L17.2452 33.8917C17.5945 34.0361 17.9869 34.0361 18.3362 33.8917L29.6574 29.2017C29.8304 29.1301 29.9875 29.0251 30.1199 28.8928C30.2523 28.7604 30.3573 28.6032 30.4289 28.4303L37.2078 12.065C37.2795 11.8921 37.3164 11.7068 37.3164 11.5196C37.3165 11.3325 37.2796 11.1471 37.208 10.9742ZM20.425 29.9407L21.8784 26.4316L25.3873 27.885L20.425 29.9407ZM28.3407 26.0222L21.6524 23.252C21.3031 23.1075 20.9107 23.1076 20.5615 23.2523C20.2123 23.3969 19.9348 23.6743 19.79 24.0235L17.0194 30.7123L3.28783 25.0247L12.2918 3.28773L34.0286 12.2912L28.3407 26.0222Z" fill="currentColor"/>
+                    <path d="M25.3493 16.976L24.258 14.3423L16.959 17.3666L15.7196 14.375L13.0859 15.4659L15.4161 21.0916L25.3493 16.976Z" fill="currentColor"/>
+                  </svg>
+                  <span>#{title_reactions}</span>
+                </div>
+                  
+                <div class="full-start__button selector button--subscribe hide">
+                  <svg width="25" height="30" viewBox="0 0 25 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.01892 24C6.27423 27.3562 9.07836 30 12.5 30C15.9216 30 18.7257 27.3562 18.981 24H15.9645C15.7219 25.6961 14.2632 27 12.5 27C10.7367 27 9.27804 25.6961 9.03542 24H6.01892Z" fill="currentColor"/>
+                    <path d="M3.81972 14.5957V10.2679C3.81972 5.41336 7.7181 1.5 12.5 1.5C17.2819 1.5 21.1803 5.41336 21.1803 10.2679V14.5957C21.1803 15.8462 21.5399 17.0709 22.2168 18.1213L23.0727 19.4494C24.2077 21.2106 22.9392 23.5 20.9098 23.5H4.09021C2.06084 23.5 0.792282 21.2106 1.9273 19.4494L2.78317 18.1213C3.46012 17.0709 3.81972 15.8462 3.81972 14.5957Z" stroke="currentColor" stroke-width="2.5"/>
+                  </svg>
+                  <span>#{title_subscribe}</span>
+                </div>
+                  
+                <div class="full-start__button selector button--options">
+                  <svg width="38" height="10" viewBox="0 0 38 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="4.88968" cy="4.98563" r="4.75394" fill="currentColor"/>
+                    <circle cx="18.9746" cy="4.98563" r="4.75394" fill="currentColor"/>
+                    <circle cx="33.0596" cy="4.98563" r="4.75394" fill="currentColor"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+              
+            <div class="applecation__right">
+              <div class="full-start-new__reactions selector">
+                <div>#{reactions_none}</div>
+              </div>
+              
+              ${"corner" === n ? e : ""}
+              
+              \x3c!-- Скрытый элемент для совместимости (предотвращает выход реакций за экран) --\x3e
+              <div class="full-start-new__rate-line">
+                <div class="full-start__status hide"></div>
+              </div>
+              
+              \x3c!-- Пустой маркер для предотвращения вставки элементов от modss.js --\x3e
+              <div class="rating--modss" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+          
+        <div class="hide buttons--container">
+          <div class="full-start__button view--torrent hide">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50px" height="50px">
+              <path d="M25,2C12.317,2,2,12.317,2,25s10.317,23,23,23s23-10.317,23-23S37.683,2,25,2z M40.5,30.963c-3.1,0-4.9-2.4-4.9-2.4 S34.1,35,27,35c-1.4,0-3.6-0.837-3.6-0.837l4.17,9.643C26.727,43.92,25.874,44,25,44c-2.157,0-4.222-0.377-6.155-1.039L9.237,16.851 c0,0-0.7-1.2,0.4-1.5c1.1-0.3,5.4-1.2,5.4-1.2s1.475-0.494,1.8,0.5c0.5,1.3,4.063,11.112,4.063,11.112S22.6,29,27.4,29 c4.7,0,5.9-3.437,5.7-3.937c-1.2-3-4.993-11.862-4.993-11.862s-0.6-1.1,0.8-1.4c1.4-0.3,3.8-0.7,3.8-0.7s1.105-0.163,1.6,0.8 c0.738,1.437,5.193,11.262,5.193,11.262s1.1,2.9,3.3,2.9c0.464,0,0.834-0.046,1.152-0.104c-0.082,1.635-0.348,3.221-0.817,4.722 C42.541,30.867,41.756,30.963,40.5,30.963z" fill="currentColor"/>
+            </svg>
+            <span>#{full_torrents}</span>
+          </div>
+          
+          <div class="full-start__button selector view--trailer">
+            <svg height="70" viewBox="0 0 80 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M71.2555 2.08955C74.6975 3.2397 77.4083 6.62804 78.3283 10.9306C80 18.7291 80 35 80 35C80 35 80 51.2709 78.3283 59.0694C77.4083 63.372 74.6975 66.7603 71.2555 67.9104C65.0167 70 40 70 40 70C40 70 14.9833 70 8.74453 67.9104C5.3025 66.7603 2.59172 63.372 1.67172 59.0694C0 51.2709 0 35 0 35C0 35 0 18.7291 1.67172 10.9306C2.59172 6.62804 5.3025 3.2395 8.74453 2.08955C14.9833 0 40 0 40 0C40 0 65.0167 0 71.2555 2.08955ZM55.5909 35.0004L29.9773 49.5714V20.4286L55.5909 35.0004Z" fill="currentColor"></path>
+            </svg>
+            <span>#{full_trailers}</span>
+          </div>
+        </div>
+      </div>`;
     (Lampa.Template.add("full_start_new", t),
       Lampa.Template.add(
         "full_episode",
-        '<div class="full-episode selector layer--visible">\n            <div class="full-episode__img">\n                <img />\n                <div class="full-episode__time">{time}</div>\n            </div>\n\n            <div class="full-episode__body">\n                <div class="full-episode__num">#{full_episode} {num}</div>\n                <div class="full-episode__name">{name}</div>\n                <div class="full-episode__overview">{overview}</div>\n                <div class="full-episode__date">{date}</div>\n            </div>\n        </div>'
+        `<div class="full-episode selector layer--visible">
+          <div class="full-episode__img">
+            <img />
+            <div class="full-episode__time">{time}</div>
+          </div>
+          
+          <div class="full-episode__body">
+            <div class="full-episode__num">#{full_episode} {num}</div>
+            <div class="full-episode__name">{name}</div>
+            <div class="full-episode__overview">{overview}</div>
+            <div class="full-episode__date">{date}</div>
+          </div>
+        </div>`
       ));
   }
   function s(n, t) {
