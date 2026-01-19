@@ -376,7 +376,7 @@
 
             /* Фон - переопределяем стандартную анимацию на fade */
             .full-start__background {
-              height: calc(100% + 6em);
+              height: calc(100vh + 6em);
               left: 0 !important;
               opacity: 0 !important;
               transition: opacity 0.6s ease-out, filter 0.3s ease-out !important;
