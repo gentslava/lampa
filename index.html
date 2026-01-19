@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="./vender/scrollbar/jquery.scrollbar.css">
     <link rel="stylesheet" href="./vender/keypad/style.css">
 
-    <link rel="stylesheet" href="css/app.css?v=4.56">
+    <link rel="stylesheet" href="css/app.min.css?v=4.56">
 </head>
 <body style="background: #1d1f20;">
     <script>
@@ -136,7 +136,7 @@
             putScript(
                 urlJoin(lampa_url, 'app.min.js?v=' + cache_version),
                 function () {
-                    var css = urlJoin(lampa_url, 'css/app.css?v=' + cache_version)
+                    var css = urlJoin(lampa_url, 'css/app.min.css?v=' + cache_version)
 
                     $('head').append('<link rel="stylesheet" href="' + css + '">')
                 },
@@ -144,7 +144,7 @@
                     putScript(
                         urlJoin(lampa_url, 'lampa-main/app.min.js?v=' + cache_version),
                         function () {
-                            var css = urlJoin(lampa_url, 'lampa-main/css/app.css?v=' + cache_version)
+                            var css = urlJoin(lampa_url, 'lampa-main/css/app.min.css?v=' + cache_version)
 
                             $('head').append('<link rel="stylesheet" href="' + css + '">')
 
