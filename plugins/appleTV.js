@@ -326,9 +326,11 @@
               margin: 0;
               display: flex;
               align-items: flex-end;
+              gap: 0.5em;
             }
             .applecation .full-start-new__reactions > div {
               align-self: flex-end;
+              padding: 0;
             }
             .applecation .full-start-new__reactions:not(.focus) {
               margin: 0;
@@ -339,13 +341,13 @@
 
             /* Стили первой реакции (всегда видимой) */
             .applecation .full-start-new__reactions:not(.focus) > div:first-child .reaction {
-              display: flex !important;
-              align-items: center !important;
-              background-color: rgba(0, 0, 0, 0) !important;
-              gap: 0 !important;
+              display: flex;
+              align-items: center;
+              background-color: transparent;
+              padding: 0;
             }
             .applecation .full-start-new__reactions:not(.focus) > div:first-child .reaction__icon {
-              background-color: rgba(0, 0, 0, 0.3) !important;
+              background-color: rgba(0, 0, 0, 0.3);
               -webkit-border-radius: 5em;
               -moz-border-radius: 5em;
               border-radius: 5em;
