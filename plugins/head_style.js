@@ -18,6 +18,7 @@
     aisearch: { ru: "ИИ поиск", en: "AI search" },
     time: { ru: "Время", en: "Clock" },
     style_background: { ru: "Подложка для шапки", en: "Header background" },
+    style_compact: { ru: "Компактная шапка", en: "Elegant header" },
   });
 
   function startPlugin() {
@@ -64,6 +65,11 @@
         style: true,
         element: ".head__body",
       },
+      head_filter_style_compact: {
+        name: Lampa.Lang.translate("style_compact"),
+        style: true,
+        element: ".head__controls",
+      },
     };
 
     function showHideElement(selector, show) {
@@ -108,71 +114,74 @@
       }, 100);
     }
 
-    function applySettings() {
-      Object.keys(head).forEach((key) => {
-        const show = Lampa.Storage.get(key, true);
-        const selector = head[key].element;
+    function applyChange(key) {
+      let selector = head[key].element;
 
-        if (!selector) return;
+      if (!selector) return;
 
-        if (head[key].style) {
-          const headElement = Lampa.Head.render();
-          if (!headElement || !headElement.length) return;
+      if (head[key].style) {
+        const background = Lampa.Storage.get("head_filter_style_background", false);
 
-          const el = headElement.find(selector);
-          if (el.length) {
-            if (show) {
-              el.addClass("head__body--background");
-            } else {
-              el.removeClass("head__body--background");
+        if (key === "head_filter_style_compact" && !background) return;
+
+        const headElement = Lampa.Head.render();
+        if (!headElement || !headElement.length) return;
+
+        const compactMode = Lampa.Storage.get("head_filter_style_compact", false);
+        if (compactMode) selector = head["head_filter_style_compact"].element;
+
+        const el = headElement.find(selector);
+        if (el.length) {
+          if (background) {
+            el.addClass("head__body--background");
+          } else {
+            el.removeClass("head__body--background");
+
+            const children = headElement.find(head["head_filter_style_compact"].element);
+            if (children.length) {
+              children.removeClass("head__body--background");
+              children.removeClass("head__body--padding");
             }
+            return;
           }
-          return;
-        }
+        
+          if (compactMode) {
+            el.addClass("head__body--padding");
 
-        if (
-          key === "head_filter_show_notice" ||
-          key === "head_filter_show_profile"
-        ) {
-          handleDynamicElement(selector, show);
-        } else {
-          showHideElement(selector, show);
+            const parent = headElement.find(head["head_filter_style_background"].element);
+            if (parent.length) parent.removeClass("head__body--background");
+          } else {
+            el.removeClass("head__body--padding");
+            el.removeClass("head__body--background");
+
+            const parent = headElement.find(head["head_filter_style_background"].element);
+            if (parent.length) parent.addClass("head__body--background");
+          }
         }
-      });
+        
+        return;
+      }
+
+      const show = Lampa.Storage.get(key, true);
+      if (
+        key === "head_filter_show_notice" ||
+        key === "head_filter_show_profile"
+      ) {
+        handleDynamicElement(selector, show);
+      } else {
+        showHideElement(selector, show);
+      }
+    }
+
+    function applySettings() {
+      Object.keys(head).forEach(applyChange);
     }
 
     Lampa.Storage.listener.follow("change", (event) => {
       if (event.name === "activity") {
         setTimeout(applySettings, 500);
       } else if (event.name in head) {
-        const show = Lampa.Storage.get(event.name, true);
-        const selector = head[event.name].element;
-
-        if (!selector) return;
-
-        if (head[event.name].style) {
-          const headElement = Lampa.Head.render();
-          if (!headElement || !headElement.length) return;
-
-          const el = headElement.find(selector);
-          if (el.length) {
-            if (show) {
-              el.addClass("head__body--background");
-            } else {
-              el.removeClass("head__body--background");
-            }
-          }
-          return;
-        }
-        
-        if (
-          event.name === "head_filter_show_notice" ||
-          event.name === "head_filter_show_profile"
-        ) {
-          handleDynamicElement(selector, show);
-        } else {
-          showHideElement(selector, show);
-        }
+        applyChange(event.name);
       }
     });
 
@@ -236,6 +245,9 @@
       .head__body--background {
         background-color: rgba(0, 0, 0, 0.3);
         border-radius: 1em;
+      }
+      .head__body--padding {
+        padding: 0.3em 1em;
       }
       </style>
       `
