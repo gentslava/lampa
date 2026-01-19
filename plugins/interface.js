@@ -449,7 +449,22 @@
       }
       .new-interface .card-more__box { padding-bottom: 95%; }
       .new-interface .full-start__background { height: calc(100% + 6em); top: -6em; }
-      .new-interface .full-start__overlay { position: absolute; width: 100%; height: calc(100% + 6em); background: #0006; top: -6em; }
+      .new-interface .full-start__overlay {
+        position: absolute;
+        width: 100%;
+        height: calc(100% + 6em);
+        background: #0006; top: -6em;
+
+        width: 90vw;
+        background:
+          linear-gradient(to right,
+            rgba(0, 0, 0, 0.792) 0%,
+            rgba(0, 0, 0, 0.504) 50%,
+            rgba(0, 0, 0, 0.264) 70%, 
+            rgba(0, 0, 0, 0.12) 80%, 
+            rgba(0, 0, 0, 0) 100%
+          );
+      }
       .new-interface .full-start__rate { font-size: 1.3em; margin-right: 0; }
       .new-interface .card__promo { display: none; }
       .new-interface .card.card--wide+.card-more .card-more__box { padding-bottom: 95%; }
