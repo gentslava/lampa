@@ -448,11 +448,11 @@
         width: 70%;
       }
       .new-interface .card-more__box { padding-bottom: 95%; }
-      .new-interface .full-start__background { height: calc(100% + 6em); top: -6em; }
+      .new-interface .full-start__background { height: calc(100vh + 6em); top: -6em; }
       .new-interface .full-start__overlay {
         position: absolute;
         width: 100%;
-        height: calc(100% + 6em);
+        height: calc(100vh + 6em);
         background: #0006; top: -6em;
 
         width: 90vw;
