@@ -7,7 +7,8 @@
       ru: "Плагин для настройки шапки",
       en: "Plugin for customizing the header",
     },
-    name_menu: { ru: "Отображать в шапке", en: "Display in header" },
+    name_menu_filter: { ru: "Отображать в шапке", en: "Display in header" },
+    name_menu_style: { ru: "Стиль шапки", en: "Header style" },
     search: { ru: "Поиск", en: "Search" },
     settings: { ru: "Настройки", en: "Settings" },
     profile: { ru: "Профиль", en: "Profile" },
@@ -16,6 +17,7 @@
     notice: { ru: "Уведомления", en: "Notifications" },
     aisearch: { ru: "ИИ поиск", en: "AI search" },
     time: { ru: "Время", en: "Clock" },
+    style_background: { ru: "Подложка для шапки", en: "Header background" },
   });
 
   function startPlugin() {
@@ -56,6 +58,11 @@
       head_filter_show_time: {
         name: Lampa.Lang.translate("time"),
         element: ".head__time",
+      },
+      head_filter_style_background: {
+        name: Lampa.Lang.translate("style_background"),
+        style: true,
+        element: ".head__body",
       },
     };
 
@@ -106,6 +113,23 @@
         const show = Lampa.Storage.get(key, true);
         const selector = head[key].element;
 
+        if (!selector) return;
+
+        if (head[key].style) {
+          const headElement = Lampa.Head.render();
+          if (!headElement || !headElement.length) return;
+
+          const el = headElement.find(selector);
+          if (el.length) {
+            if (show) {
+              el.addClass("head__body--background");
+            } else {
+              el.removeClass("head__body--background");
+            }
+          }
+          return;
+        }
+
         if (
           key === "head_filter_show_notice" ||
           key === "head_filter_show_profile"
@@ -124,6 +148,23 @@
         const show = Lampa.Storage.get(event.name, true);
         const selector = head[event.name].element;
 
+        if (!selector) return;
+
+        if (head[event.name].style) {
+          const headElement = Lampa.Head.render();
+          if (!headElement || !headElement.length) return;
+
+          const el = headElement.find(selector);
+          if (el.length) {
+            if (show) {
+              el.addClass("head__body--background");
+            } else {
+              el.removeClass("head__body--background");
+            }
+          }
+          return;
+        }
+        
         if (
           event.name === "head_filter_show_notice" ||
           event.name === "head_filter_show_profile"
@@ -158,16 +199,48 @@
     Lampa.SettingsApi.addParam({
       component: "head_filter",
       param: { type: "title" },
-      field: { name: Lampa.Lang.translate("name_menu") },
+      field: { name: Lampa.Lang.translate("name_menu_filter") },
     });
 
-    Object.keys(head).forEach((key) => {
+    Object.entries(head).forEach(([key, value]) => {
+      if (!!value.style) return;
+      
       Lampa.SettingsApi.addParam({
         component: "head_filter",
         param: { name: key, type: "trigger", default: true },
-        field: { name: head[key].name },
+        field: { name: value.name },
       });
     });
+
+    Lampa.SettingsApi.addParam({
+      component: "head_filter",
+      param: { type: "title" },
+      field: { name: Lampa.Lang.translate("name_menu_style") },
+    });
+
+    Object.entries(head).forEach(([key, value]) => {
+      if (!value.style) return;
+      
+      Lampa.SettingsApi.addParam({
+        component: "head_filter",
+        param: { name: key, type: "trigger", default: false },
+        field: { name: value.name },
+      });
+    });
+
+
+    Lampa.Template.add(
+      "settings_head_style",
+      `
+      <style>
+      .head__body--background {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 1em;
+      }
+      </style>
+      `
+    );
+    $("body").append(Lampa.Template.get("settings_head_style", {}, true));
   }
 
   if (window.appready) {
