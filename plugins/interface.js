@@ -150,6 +150,22 @@
     }
   }
 
+  function normalizeShotsThumb(it) {
+    if (!it) return;
+
+    // главное превью
+    if (!it.backdrop_path && it.screen) it.backdrop_path = it.screen;
+    if (!it.poster_path && it.screen) it.poster_path = it.screen;
+
+    // fallback: если вдруг где-то нужен постер фильма (TMDB-относительный путь)
+    if (!it.poster_path && it.card_poster) it.poster_path = it.card_poster;
+
+    // иногда Card ожидает title/year
+    if (!it.title && it.card_title) it.title = it.card_title;
+    if (!it.release_date && it.card_year)
+      it.release_date = String(it.card_year) + "-01-01";
+  }
+
   function component(object) {
     var network = new Lampa.Reguest();
     var scroll = new Lampa.Scroll({
@@ -309,6 +325,15 @@
         });
       }
 
+      var isShots =
+        element &&
+        (String(element.title || "").toLowerCase() === "shots" ||
+          String(element.name || "").toLowerCase() === "shots");
+
+      if (isShots && element.results && Array.isArray(element.results)) {
+        element.results.forEach(normalizeShotsThumb);
+      }
+
       var item = new Lampa.InteractionLine(element, {
         url: element.url,
         card_small: true,
@@ -340,7 +365,7 @@
         try {
           this.emit.onInstance.call(this, item, element);
         } catch (e) {
-          console.error(e)
+          console.error(e);
         }
       }
 
@@ -467,6 +492,83 @@
 
   function startPlugin() {
     window.plugin_interface_ready = true;
+
+    function makeAbsUrlSafe(fn) {
+      if (typeof fn !== "function") return fn;
+      if (fn.__abs_url_safe) return fn;
+
+      function patched(path, size) {
+        if (typeof path === "string") {
+          if (path.indexOf("http://") === 0 || path.indexOf("https://") === 0)
+            return path;
+          if (path.indexOf("//") === 0) return location.protocol + path;
+        }
+        return fn.call(this, path, size);
+      }
+
+      patched.__abs_url_safe = true;
+      patched.__orig = fn;
+      return patched;
+    }
+
+    function reactiveWrap(obj, key) {
+      if (!obj) return false;
+
+      let wrapped = makeAbsUrlSafe(obj[key]);
+
+      try {
+        Object.defineProperty(obj, key, {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return wrapped;
+          },
+          set(next) {
+            wrapped = makeAbsUrlSafe(next);
+          },
+        });
+        wrapped = makeAbsUrlSafe(obj[key]);
+        return true;
+      } catch (e) {
+        obj[key] = wrapped;
+        return false;
+      }
+    }
+
+    reactiveWrap(Lampa.Api, "img");
+    reactiveWrap(Lampa.TMDB, "image");
+    reactiveWrap(Lampa.TMDB, "img");
+
+    function reactiveWrapObject(root, objKey, onSet) {
+      if (!root) return;
+      let current = root[objKey];
+
+      try {
+        Object.defineProperty(root, objKey, {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return current;
+          },
+          set(next) {
+            current = next;
+            try {
+              onSet(next);
+            } catch (e) {}
+          },
+        });
+        if (current) onSet(current);
+      } catch (e) {}
+    }
+
+    reactiveWrapObject(Lampa, "TMDB", (tmdb) => {
+      reactiveWrap(tmdb, "image");
+      reactiveWrap(tmdb, "img");
+    });
+
+    reactiveWrapObject(Lampa, "Api", (api) => {
+      reactiveWrap(api, "img");
+    });
 
     // --- PR #281: main создается через Utils.createInstance ---
     if (Lampa.Utils && typeof Lampa.Utils.createInstance === "function") {
