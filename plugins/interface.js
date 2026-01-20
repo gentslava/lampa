@@ -24,12 +24,20 @@
       html
         .find(".new-interface-info__head,.new-interface-info__details")
         .text("---");
-      html.find(".new-interface-info__title").text(data.title);
+
+      html
+        .find(".new-interface-info__title")
+        .text(data.title || data.name || "");
+
       html
         .find(".new-interface-info__description")
         .text(data.overview || Lampa.Lang.translate("full_notext"));
-      Lampa.Background.change(Lampa.Api.img(data.backdrop_path, "w200"));
-      this.load(data);
+
+      if (data.backdrop_path) {
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, "w200"));
+      }
+
+      if (data.id) this.load(data);
     };
 
     this.draw = function (data) {
@@ -41,6 +49,7 @@
       var details = [];
       var countries = Lampa.Api.sources.tmdb.parseCountries(data);
       var pg = Lampa.Api.sources.tmdb.parsePG(data);
+
       if (create !== "0000") head.push("<span>" + create + "</span>");
       if (countries.length > 0) head.push(countries.join(", "));
       if (vote > 0)
@@ -49,6 +58,7 @@
             vote +
             "</div><div>TMDB</div></div>"
         );
+
       if (data.genres && data.genres.length > 0)
         details.push(
           data.genres
@@ -57,14 +67,17 @@
             })
             .join(" | ")
         );
+
       if (data.runtime)
         details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+
       if (pg)
         details.push(
           '<span class="full-start__pg" style="font-size: 0.9em;">' +
             pg +
             "</span>"
         );
+
       html.find(".new-interface-info__head").empty().append(head.join(", "));
       html
         .find(".new-interface-info__details")
@@ -77,6 +90,8 @@
       var _this = this;
 
       clearTimeout(timer);
+      if (!data || !data.id) return;
+
       var url = Lampa.TMDB.api(
         (data.name ? "tv" : "movie") +
           "/" +
@@ -86,7 +101,9 @@
           "&append_to_response=content_ratings,release_dates&language=" +
           Lampa.Storage.get("language")
       );
+
       if (loaded[url]) return this.draw(loaded[url]);
+
       timer = setTimeout(function () {
         network.clear();
         network.timeout(5000);
@@ -104,10 +121,33 @@
     this.empty = function () {};
 
     this.destroy = function () {
-      html.remove();
+      if (html) html.remove();
       loaded = {};
       html = null;
     };
+  }
+
+  function normalizeEpisodeThumb(it) {
+    if (!it) return;
+
+    var still = it.still_path || (it.episode && it.episode.still_path) || null;
+    var card = it.card || (it.episode && it.episode.card) || null;
+
+    if (!it.backdrop_path) {
+      it.backdrop_path =
+        still ||
+        (card && (card.backdrop_path || card.poster_path)) ||
+        it.poster_path ||
+        null;
+    }
+
+    if (!it.poster_path) {
+      it.poster_path =
+        still ||
+        (card && (card.poster_path || card.backdrop_path)) ||
+        it.backdrop_path ||
+        null;
+    }
   }
 
   function component(object) {
@@ -117,31 +157,31 @@
       over: true,
       scroll_by_item: true,
     });
+
     var items = [];
     var html = $(
       '<div class="new-interface"><img class="full-start__background"><div class="full-start__overlay"></div></div>'
     );
     var active = 0;
     var newlampa = Lampa.Manifest.app_digital >= 166;
+
     var info;
     var lezydata;
+
     var viewall =
       Lampa.Storage.field("card_views_type") == "view" ||
       Lampa.Storage.field("navigation_type") == "mouse";
+
     var background_img = html.find(".full-start__background");
     var background_last = "";
     var background_timer;
 
     this.emit = {};
-
     this.use = function (emit) {
       emit = emit || {};
+      for (var k in emit) this.emit[k] = emit[k];
 
-      if (typeof emit.onCreate === "function")
-        this.emit.onCreate = emit.onCreate;
-      if (typeof emit.onNext === "function") this.emit.onNext = emit.onNext;
-
-      if (this.emit.onNext) {
+      if (typeof this.emit.onNext === "function") {
         var _this = this;
         this.next = function (resolve, reject) {
           return _this.emit.onNext.call(_this, resolve, reject);
@@ -152,7 +192,9 @@
     };
 
     this.create = function () {
-      if (this.emit.onCreate) this.emit.onCreate.call(this);
+      if (this.emit && typeof this.emit.onCreate === "function") {
+        this.emit.onCreate.call(this);
+      }
     };
 
     this.empty = function () {
@@ -166,9 +208,7 @@
         );
         button.find(".selector").on("hover:enter", function () {
           Lampa.Storage.set("source", "cub");
-          Lampa.Activity.replace({
-            source: "cub",
-          });
+          Lampa.Activity.replace({ source: "cub" });
         });
       }
 
@@ -198,16 +238,18 @@
       }
     };
 
-    this.push = function () {};
-
     this.build = function (data) {
       var _this2 = this;
 
       lezydata = data;
+
       info = new create(object);
       info.create();
+
       scroll.minus(info.render());
+
       data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
+
       html.append(info.render());
       html.append(scroll.render());
 
@@ -228,9 +270,13 @@
     };
 
     this.background = function (elem) {
-      var new_background = Lampa.Api.img(elem.backdrop_path, "w1280");
+      var base = elem && elem.card ? elem.card : elem;
+      if (!base || !base.backdrop_path) return;
+
+      var new_background = Lampa.Api.img(base.backdrop_path, "w1280");
       clearTimeout(background_timer);
       if (new_background == background_last) return;
+
       background_timer = setTimeout(function () {
         background_img.removeClass("loaded");
 
@@ -243,6 +289,7 @@
         };
 
         background_last = new_background;
+
         setTimeout(function () {
           background_img[0].src = background_last;
         }, 300);
@@ -254,6 +301,14 @@
 
       if (element.ready) return;
       element.ready = true;
+
+      if (element && Array.isArray(element.results)) {
+        element.results.forEach(function (r) {
+          if (r && (r.still_path || r.card || r.episode))
+            normalizeEpisodeThumb(r);
+        });
+      }
+
       var item = new Lampa.InteractionLine(element, {
         url: element.url,
         card_small: true,
@@ -263,7 +318,34 @@
         card_wide: true,
         nomore: element.nomore,
       });
+
+      if (item && typeof item.use !== "function") {
+        item.use = function (payload) {
+          payload = payload || {};
+          this._emit = this._emit || {};
+          for (var k in payload) this._emit[k] = payload[k];
+
+          if (typeof payload.onMore === "function")
+            this.onMore = payload.onMore;
+          if (typeof payload.onInstance === "function")
+            this.onInstance = payload.onInstance;
+          if (typeof payload.module !== "undefined")
+            this.module = payload.module;
+
+          return this;
+        };
+      }
+
+      if (this.emit && typeof this.emit.onInstance === "function") {
+        try {
+          this.emit.onInstance.call(this, item, element);
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
       item.create();
+
       item.onDown = this.down.bind(this);
       item.onUp = this.up.bind(this);
       item.onBack = this.back.bind(this);
@@ -272,19 +354,25 @@
         active = items.indexOf(item);
       };
 
-      if (this.onMore) item.onMore = this.onMore.bind(this);
+      var prevFocus = item.onFocus;
+      var prevHover = item.onHover;
 
       item.onFocus = function (elem) {
-        info.update(elem);
-        _this3.background(elem);
+        if (typeof prevFocus === "function") prevFocus(elem);
+        var base = elem && elem.card ? elem.card : elem;
+        info.update(base || {});
+        _this3.background(elem || base || {});
       };
 
       item.onHover = function (elem) {
-        info.update(elem);
-        _this3.background(elem);
+        if (typeof prevHover === "function") prevHover(elem);
+        var base = elem && elem.card ? elem.card : elem;
+        info.update(base || {});
+        _this3.background(elem || base || {});
       };
 
       item.onFocusMore = info.empty.bind(info);
+
       scroll.append(item.render());
       items.push(item);
     };
@@ -304,7 +392,6 @@
 
     this.up = function () {
       active--;
-
       if (active < 0) {
         active = 0;
         Lampa.Controller.toggle("head");
@@ -319,27 +406,28 @@
 
       Lampa.Controller.add("content", {
         link: this,
-        toggle: function toggle() {
+        toggle: function () {
           if (_this4.activity.canRefresh()) return false;
           if (items.length) items[active].toggle();
         },
-        update: function update() {},
-        left: function left() {
+        update: function () {},
+        left: function () {
           if (Navigator.canmove("left")) Navigator.move("left");
           else Lampa.Controller.toggle("menu");
         },
-        right: function right() {
+        right: function () {
           Navigator.move("right");
         },
-        up: function up() {
+        up: function () {
           if (Navigator.canmove("up")) Navigator.move("up");
           else Lampa.Controller.toggle("head");
         },
-        down: function down() {
+        down: function () {
           if (Navigator.canmove("down")) Navigator.move("down");
         },
         back: this.back,
       });
+
       Lampa.Controller.toggle("content");
     };
 
@@ -349,7 +437,6 @@
     };
 
     this.pause = function () {};
-
     this.stop = function () {};
 
     this.render = function () {
@@ -368,6 +455,16 @@
     };
   }
 
+  function isRootScreenObject(element) {
+    if (!element || typeof element !== "object") return false;
+    if (!(element.source === "tmdb" || element.source === "cub")) return false;
+    if (!(element.component === "main" || element.component === "category"))
+      return false;
+    if (window.innerWidth < 767) return false;
+    if (Lampa.Manifest.app_digital < 153) return false;
+    return true;
+  }
+
   function startPlugin() {
     window.plugin_interface_ready = true;
 
@@ -384,18 +481,12 @@
         element = element || {};
         add_params = add_params || {};
 
-        var ok_source = element.source === "tmdb" || element.source === "cub";
-        var ok_width = window.innerWidth >= 767;
-        var ok_ver = Lampa.Manifest.app_digital >= 153;
-        var is_main = element.component === "main";
-
-        if (is_main && ok_source && ok_width && ok_ver) {
+        if (isRootScreenObject(element)) {
           add_params = Object.assign({}, add_params, {
             createInstance: function (el) {
               return new component(el);
             },
           });
-
           replace = true;
         }
 
