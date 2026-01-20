@@ -73,8 +73,10 @@
   function normalizeEpisodeThumb(it) {
     if (!it) return;
 
-    var still = it.still_path || (it.episode && it.episode.still_path) || null;
+    var ep = it.episode || it;
     var card = it.card || (it.episode && it.episode.card) || null;
+
+    var still = ep.still_path || null;
 
     if (!it.backdrop_path) {
       it.backdrop_path =
@@ -91,22 +93,76 @@
         it.backdrop_path ||
         null;
     }
+
+    if (it.id != null && it.episode_id == null) it.episode_id = it.id;
+
+    if (card && card.id != null) {
+      it.id = card.id;
+    }
+
+    if (card) {
+      if (!it.name && card.name) it.name = card.name;
+      if (!it.title && card.title) it.title = card.title;
+      if (!it.overview && card.overview) it.overview = card.overview;
+
+      if (!it.source && card.source) it.source = card.source;
+    }
   }
 
   // Shots row: screen is absolute URL — must remain absolute.
   function normalizeShotsThumb(it) {
     if (!it) return;
 
+    // image preview
     if (!it.backdrop_path && it.screen) it.backdrop_path = it.screen;
     if (!it.poster_path && it.screen) it.poster_path = it.screen;
 
     // fallback: tmdb relative poster for movie/series
     if (!it.poster_path && it.card_poster) it.poster_path = it.card_poster;
 
-    // some cards expect title/year
+    // title for UI
     if (!it.title && it.card_title) it.title = it.card_title;
-    if (!it.release_date && it.card_year)
-      it.release_date = String(it.card_year) + "-01-01";
+
+    // movie/tv id = card_id
+    var cid = it.card_id ? parseInt(it.card_id, 10) : null;
+
+    if (!it.card) it.card = {};
+    if (cid) it.card.id = cid;
+
+    it.card.source = it.card.source || "tmdb";
+    it.card.type = (it.card.type || it.card_type || "movie")
+      .toString()
+      .toLowerCase();
+    if (it.card.type !== "tv" && it.card.type !== "movie")
+      it.card.type = "movie";
+
+    // posters full/background
+    if (!it.card.poster_path && it.card_poster)
+      it.card.poster_path = it.card_poster;
+    if (!it.card.backdrop_path && it.backdrop_path)
+      it.card.backdrop_path = it.backdrop_path;
+
+    if (it.id != null && it.shot_id == null) it.shot_id = it.id;
+    if (cid) it.id = cid;
+
+    // movie -> title, tv -> name
+    if (it.card.type === "movie") {
+      it.card.title = it.card.title || it.card_title || it.title || "";
+      if (it.card.name) delete it.card.name;
+      if (it.name) delete it.name;
+
+      if (!it.card.release_date && it.card_year)
+        it.card.release_date = it.card_year + "-01-01";
+      if (it.card.first_air_date) delete it.card.first_air_date;
+    } else {
+      it.card.name = it.card.name || it.card_title || it.name || it.title || "";
+      if (it.card.title) delete it.card.title;
+      if (!it.name && it.card_title) it.name = it.card_title;
+
+      if (!it.card.first_air_date && it.card_year)
+        it.card.first_air_date = it.card_year + "-01-01";
+      if (it.card.release_date) delete it.card.release_date;
+    }
   }
 
   /**
