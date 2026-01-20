@@ -1,242 +1,60 @@
 (function () {
   "use strict";
 
-  /**
-   * =========================
-   *  Small helpers
-   * =========================
-   */
-  function isAbsoluteUrl(s) {
+  /** ---------------------------
+   * Utils
+   * -------------------------- */
+
+  // ✅ более корректная проверка абсолютности + поддержка протокол-relative
+  function isAbsUrl(u) {
     return (
-      typeof s === "string" &&
-      (s.indexOf("http://") === 0 ||
-        s.indexOf("https://") === 0 ||
-        s.indexOf("//") === 0)
+      typeof u === "string" &&
+      (/^(https?:)?\/\//i.test(u) || /^data:/i.test(u) || /^blob:/i.test(u))
     );
   }
 
-  // Локализованная дата как в Episode: Utils.parseTime(...).full
-  // Нужно "8 Апреля" (без года) -> убираем год в конце если это YYYY.
-  function formatDayMonthFromLampa(iso) {
-    if (!iso) return "";
-    try {
-      var full = Lampa.Utils.parseTime(iso).full || "";
-      full = String(full).trim();
-      if (!full) return "";
+  // ✅ фикс "двойного tmdb", и нормализация protocol-relative
+  function normalizeAbsUrl(u) {
+    if (typeof u !== "string") return u;
 
-      var parts = full.split(/\s+/);
-      if (parts.length >= 3 && /^\d{4}$/.test(parts[parts.length - 1])) {
-        parts.pop();
-        return parts.join(" ");
-      }
-      return full;
-    } catch (e) {
-      return String(iso);
-    }
-  }
-
-  function isRootScreenObject(element) {
-    if (!element || typeof element !== "object") return false;
-    if (!(element.source === "tmdb" || element.source === "cub")) return false;
-    if (!(element.component === "main" || element.component === "category"))
-      return false;
-    if (window.innerWidth < 767) return false;
-    if (Lampa.Manifest.app_digital < 153) return false;
-    return true;
-  }
-
-  function isTimetableRow(element) {
-    if (!element || !Array.isArray(element.results) || !element.results.length)
-      return false;
-
-    var r = element.results[0];
-    return !!(
-      r &&
-      (r.episode ||
-        (r.season_number != null && r.episode_number != null && r.air_date))
+    // https://image.tmdb.org/t/p/w300/https://video...  -> https://video...
+    var m = u.match(
+      /^(https?:\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i
     );
+    if (m) return m[2];
+
+    // //image.tmdb.org/t/p/w300/https://video... -> https://video...
+    m = u.match(/^(\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i);
+    if (m) return m[2];
+
+    // protocol-relative -> absolute
+    if (u.indexOf("//") === 0) return location.protocol + u;
+
+    return u;
   }
 
-  function isShotsRow(element) {
-    if (!element) return false;
-    var t = String(element.title || element.name || "").toLowerCase();
-    return t === "shots";
+  function extend(dst, src) {
+    dst = dst || {};
+    src = src || {};
+    for (var k in src) dst[k] = src[k];
+    return dst;
   }
 
-  /**
-   * =========================
-   *  Normalizers
-   * =========================
-   */
-
-  // Episodes row: ensure poster/backdrop exists (can use episode still or series poster/backdrop).
-  function normalizeEpisodeThumb(it) {
-    if (!it) return;
-
-    var ep = it.episode || it;
-    var card = it.card || (it.episode && it.episode.card) || null;
-
-    var still = ep.still_path || null;
-
-    if (!it.backdrop_path) {
-      it.backdrop_path =
-        still ||
-        (card && (card.backdrop_path || card.poster_path)) ||
-        it.poster_path ||
-        null;
-    }
-
-    if (!it.poster_path) {
-      it.poster_path =
-        still ||
-        (card && (card.poster_path || card.backdrop_path)) ||
-        it.backdrop_path ||
-        null;
-    }
-
-    if (it.id != null && it.episode_id == null) it.episode_id = it.id;
-
-    if (card && card.id != null) {
-      it.id = card.id;
-    }
-
-    if (card) {
-      if (!it.name && card.name) it.name = card.name;
-      if (!it.title && card.title) it.title = card.title;
-      if (!it.overview && card.overview) it.overview = card.overview;
-
-      if (!it.source && card.source) it.source = card.source;
-    }
+  function safeCapFirst(s) {
+    s = String(s || "");
+    if (!s) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  // Shots row: screen is absolute URL — must remain absolute.
-  function normalizeShotsThumb(it) {
-    if (!it) return;
-
-    // image preview
-    if (!it.backdrop_path && it.screen) it.backdrop_path = it.screen;
-    if (!it.poster_path && it.screen) it.poster_path = it.screen;
-
-    // fallback: tmdb relative poster for movie/series
-    if (!it.poster_path && it.card_poster) it.poster_path = it.card_poster;
-
-    // title for UI
-    if (!it.title && it.card_title) it.title = it.card_title;
-
-    // movie/tv id = card_id
-    var cid = it.card_id ? parseInt(it.card_id, 10) : null;
-
-    if (!it.card) it.card = {};
-    if (cid) it.card.id = cid;
-
-    it.card.source = it.card.source || "tmdb";
-    it.card.type = (it.card.type || it.card_type || "movie")
-      .toString()
-      .toLowerCase();
-    if (it.card.type !== "tv" && it.card.type !== "movie")
-      it.card.type = "movie";
-
-    // posters full/background
-    if (!it.card.poster_path && it.card_poster)
-      it.card.poster_path = it.card_poster;
-    if (!it.card.backdrop_path && it.backdrop_path)
-      it.card.backdrop_path = it.backdrop_path;
-
-    if (it.id != null && it.shot_id == null) it.shot_id = it.id;
-    if (cid) it.id = cid;
-
-    // movie -> title, tv -> name
-    if (it.card.type === "movie") {
-      it.card.title = it.card.title || it.card_title || it.title || "";
-      if (it.card.name) delete it.card.name;
-      if (it.name) delete it.name;
-
-      if (!it.card.release_date && it.card_year)
-        it.card.release_date = it.card_year + "-01-01";
-      if (it.card.first_air_date) delete it.card.first_air_date;
-    } else {
-      it.card.name = it.card.name || it.card_title || it.name || it.title || "";
-      if (it.card.title) delete it.card.title;
-      if (!it.name && it.card_title) it.name = it.card_title;
-
-      if (!it.card.first_air_date && it.card_year)
-        it.card.first_air_date = it.card_year + "-01-01";
-      if (it.card.release_date) delete it.card.release_date;
-    }
-  }
-
-  /**
-   * =========================
-   *  Episodes overlay (only: "Эпизод N" + "8 Апреля")
-   * =========================
-   */
-  function decorateTimetableRowReactive(rowNode, results) {
-    var root = rowNode && rowNode.jquery ? rowNode[0] : rowNode;
-    if (!root || !results || !results.length) return;
-
-    function apply() {
-      var $root = $(root);
-      var $cards = $root.find(".card");
-      if (!$cards.length) return false;
-
-      $cards.each(function (i) {
-        var r = results[i];
-        if (!r) return;
-
-        var ep = r.episode || r;
-        var air = ep.air_date;
-        var epNum = ep.episode_number;
-
-        if (!air || epNum == null) return;
-
-        var $card = $(this);
-        var $view = $card.find(".card__view");
-        if (!$view.length) $view = $card;
-
-        // idempotent
-        $view.find(".plugin-epmeta--episode").remove();
-        $view.css("position", "relative");
-
-        var epTitle = (ep.name || "").trim() || "Эпизод " + epNum;
-        var dateText = formatDayMonthFromLampa(air);
-
-        var $meta = $(
-          '<div class="plugin-epmeta--episode">' +
-            '<div class="plugin-epmeta__ep"></div>' +
-            '<div class="plugin-epmeta__date"></div>' +
-            "</div>"
-        );
-
-        $meta.find(".plugin-epmeta__ep").text(epTitle);
-        $meta.find(".plugin-epmeta__date").text(dateText);
-
-        $view.append($meta);
-      });
-
-      return true;
-    }
-
-    if (apply()) return;
-
-    var obs = new MutationObserver(function () {
-      if (apply()) obs.disconnect();
-    });
-
-    obs.observe(root, { childList: true, subtree: true });
-  }
-
-  /**
-   * =========================
-   *  Safe wrapper for Lampa.Api.img / TMDB.img / TMDB.image
-   *  - keep absolute URLs intact (Shots)
-   * =========================
-   */
-  function absUrlSafe(fn) {
+  // ✅ обертка для img-функций: если пришел абсолютный URL — не трогаем (и чиним double-tmdb)
+  function makeAbsUrlSafe(fn) {
     if (typeof fn !== "function") return fn;
     if (fn.__abs_url_safe) return fn;
 
     function patched(path, size) {
-      if (isAbsoluteUrl(path)) return path;
+      if (typeof path === "string" && isAbsUrl(path)) {
+        return normalizeAbsUrl(path);
+      }
       return fn.call(this, path, size);
     }
 
@@ -247,82 +65,106 @@
 
   function reactiveWrap(obj, key) {
     if (!obj) return;
-    var wrapped = absUrlSafe(obj[key]);
-
     try {
+      var cur = makeAbsUrlSafe(obj[key]);
       Object.defineProperty(obj, key, {
         configurable: true,
         enumerable: true,
         get: function () {
-          return wrapped;
+          return cur;
         },
         set: function (next) {
-          wrapped = absUrlSafe(next);
+          cur = makeAbsUrlSafe(next);
         },
       });
-
-      // ensure current is wrapped
-      wrapped = absUrlSafe(obj[key]);
+      obj[key] = obj[key]; // прогнать через setter
     } catch (e) {
-      // fallback: just assign
-      obj[key] = wrapped;
+      obj[key] = makeAbsUrlSafe(obj[key]);
     }
   }
 
   function reactiveWrapObject(root, key, onSet) {
     if (!root) return;
-    var current = root[key];
-
     try {
+      var cur = root[key];
       Object.defineProperty(root, key, {
         configurable: true,
         enumerable: true,
         get: function () {
-          return current;
+          return cur;
         },
         set: function (next) {
-          current = next;
+          cur = next;
           try {
             onSet(next);
           } catch (e) {}
         },
       });
+      if (cur) onSet(cur);
+    } catch (e) {}
+  }
 
-      if (current) onSet(current);
-    } catch (e) {
-      // ignore
+  /** ---------------------------
+   * Date formatting using Lampa localization
+   * Want: "8 Апреля"
+   * -------------------------- */
+  function fmtDayMonth(iso) {
+    if (!iso) return "";
+    try {
+      if (Lampa && Lampa.Utils && typeof Lampa.Utils.parseTime === "function") {
+        var pt = Lampa.Utils.parseTime(iso);
+        var full = pt && pt.full ? String(pt.full) : "";
+        full = full.trim();
+        full = full.replace(/\s+\d{4}\s*$/, "").trim();
+        full = full.replace(/^(\d+\s+)(.)/, function (m, a, b) {
+          return a + String(b).toUpperCase();
+        });
+        return full;
+      }
+    } catch (e) {}
+
+    var d = new Date(String(iso).replace(/-/g, "/"));
+    if (isNaN(d.getTime())) return String(iso);
+    try {
+      var lang =
+        (Lampa.Storage && Lampa.Storage.get && Lampa.Storage.get("language")) ||
+        "ru";
+      var month = new Intl.DateTimeFormat(lang, { month: "long" }).format(d);
+      month = safeCapFirst(month);
+      return d.getDate() + " " + month;
+    } catch (e2) {
+      return String(iso);
     }
   }
 
-  /**
-   * =========================
-   *  Info panel: title + overview + head/details
-   *  - shows "loading" if overview empty until TMDB response
-   *  - cache updates description (fix "description becomes empty on second focus")
-   * =========================
-   */
+  /** ---------------------------
+   * Info panel (top)
+   * Fix: description disappearing with cached load
+   * -------------------------- */
   function InfoPanel() {
     var html;
     var timer;
     var network = new Lampa.Reguest();
-    var cache = {};
+    var loaded = {};
     var last_url = "";
-    var $desc = null;
 
-    function setDescription(text) {
-      if (!$desc) $desc = html.find(".new-interface-info__description");
-      $desc.text(text == null ? "" : String(text));
+    function setText(sel, value) {
+      html.find(sel).text(value || "");
     }
 
-    function setLoading() {
-      setDescription(Lampa.Lang.translate("loading"));
-    }
-
-    function applyDescription(details) {
-      var ov =
-        details && details.overview ? String(details.overview).trim() : "";
-      if (ov) setDescription(ov);
-      else setDescription(Lampa.Lang.translate("full_notext"));
+    function applyOverview(movie) {
+      var ov = movie && movie.overview ? String(movie.overview).trim() : "";
+      if (ov) {
+        setText(".new-interface-info__description", ov);
+      } else {
+        var cur = html.find(".new-interface-info__description").text().trim();
+        if (!cur) {
+          setText(
+            ".new-interface-info__description",
+            Lampa.Lang.translate("full_notext")
+          );
+        }
+      }
     }
 
     this.create = function () {
@@ -336,7 +178,6 @@
           </div>
         </div>`
       );
-      $desc = html.find(".new-interface-info__description");
     };
 
     this.update = function (data) {
@@ -346,13 +187,10 @@
         .find(".new-interface-info__head,.new-interface-info__details")
         .text("---");
 
-      html
-        .find(".new-interface-info__title")
-        .text(data.title || data.name || "");
+      setText(".new-interface-info__title", data.title || data.name || "");
 
-      var baseDesc = (data.overview || "").trim();
-      if (baseDesc) setDescription(baseDesc);
-      else setLoading();
+      var desc = String(data.overview || "").trim();
+      setText(".new-interface-info__description", desc ? desc : "");
 
       if (data.backdrop_path) {
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, "w200"));
@@ -362,10 +200,10 @@
     };
 
     this.draw = function (data) {
-      var year = (
-        (data.release_date || data.first_air_date || "0000") + ""
+      var year = String(
+        data.release_date || data.first_air_date || "0000"
       ).slice(0, 4);
-      var vote = parseFloat((data.vote_average || 0) + "").toFixed(1);
+      var vote = parseFloat(String(data.vote_average || 0)).toFixed(1);
 
       var head = [];
       var details = [];
@@ -374,9 +212,9 @@
       var pg = Lampa.Api.sources.tmdb.parsePG(data);
 
       if (year !== "0000") head.push("<span>" + year + "</span>");
-      if (countries.length > 0) head.push(countries.join(", "));
+      if (countries.length) head.push(countries.join(", "));
 
-      if (vote > 0) {
+      if (Number(vote) > 0) {
         details.push(
           '<div class="full-start__rate"><div>' +
             vote +
@@ -384,25 +222,27 @@
         );
       }
 
-      if (data.genres && data.genres.length > 0) {
+      if (data.genres && data.genres.length) {
         details.push(
           data.genres
-            .map(function (item) {
-              return Lampa.Utils.capitalizeFirstLetter(item.name);
+            .map(function (g) {
+              return Lampa.Utils.capitalizeFirstLetter(g.name);
             })
             .join(" | ")
         );
       }
 
-      if (data.runtime)
+      if (data.runtime) {
         details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+      }
 
-      if (pg)
+      if (pg) {
         details.push(
           '<span class="full-start__pg" style="font-size: 0.9em;">' +
             pg +
             "</span>"
         );
+      }
 
       html.find(".new-interface-info__head").empty().append(head.join(", "));
       html
@@ -430,49 +270,396 @@
 
       last_url = url;
 
-      if (cache[url]) {
-        applyDescription(cache[url]);
-        return this.draw(cache[url]);
+      if (loaded[url]) {
+        applyOverview(loaded[url]);
+        this.draw(loaded[url]);
+        return;
       }
 
       timer = setTimeout(function () {
         network.clear();
         network.timeout(5000);
 
-        var localUrl = url;
+        network.silent(url, function (movie) {
+          loaded[url] = movie;
+          if (last_url !== url) return;
 
-        network.silent(localUrl, function (details) {
-          cache[localUrl] = details || {};
-
-          if (last_url !== localUrl) return;
-
-          applyDescription(details);
-          _this.draw(details);
+          applyOverview(movie);
+          _this.draw(movie);
         });
-      }, 250);
+      }, 200);
     };
-
-    // needed: InteractionLine expects it in some flows
-    this.empty = function () {};
 
     this.render = function () {
       return html;
     };
 
+    this.empty = function () {};
+
     this.destroy = function () {
       if (html) html.remove();
-      cache = {};
+      loaded = {};
       html = null;
-      $desc = null;
     };
   }
 
+  /** ---------------------------
+   * Normalizers
+   * -------------------------- */
+
+  function normalizeEpisodeThumb(it) {
+    if (!it) return;
+
+    var ep = it.episode || it;
+    var card = it.card || (it.episode && it.episode.card) || null;
+
+    var still = ep && ep.still_path ? ep.still_path : null;
+
+    if (!it.backdrop_path) {
+      it.backdrop_path =
+        still ||
+        (card && (card.backdrop_path || card.poster_path)) ||
+        it.poster_path ||
+        null;
+    }
+
+    if (!it.poster_path) {
+      it.poster_path =
+        still ||
+        (card && (card.poster_path || card.backdrop_path)) ||
+        it.backdrop_path ||
+        null;
+    }
+
+    if (it.id != null && it.episode_id == null) it.episode_id = it.id;
+    if (card && card.id != null) it.id = card.id;
+
+    if (card) {
+      if (!it.name && card.name) it.name = card.name;
+      if (!it.title && card.title) it.title = card.title;
+      if (!it.overview && card.overview) it.overview = card.overview;
+      if (!it.source && card.source) it.source = card.source;
+    }
+  }
+
+  function normalizeShotsThumb(it) {
+    if (!it) return;
+
+    if (!it.backdrop_path && it.screen) it.backdrop_path = it.screen;
+    if (!it.poster_path && it.screen) it.poster_path = it.screen;
+
+    if (!it.poster_path && it.card_poster) it.poster_path = it.card_poster;
+    if (!it.title && it.card_title) it.title = it.card_title;
+
+    var cid = it.card_id ? parseInt(it.card_id, 10) : null;
+
+    if (!it.card) it.card = {};
+    if (cid) it.card.id = cid;
+
+    it.card.source = it.card.source || "tmdb";
+    it.card.type = String(
+      it.card.type || it.card_type || "movie"
+    ).toLowerCase();
+    if (it.card.type !== "tv" && it.card.type !== "movie")
+      it.card.type = "movie";
+
+    if (!it.card.poster_path && it.card_poster)
+      it.card.poster_path = it.card_poster;
+    if (!it.card.backdrop_path && it.backdrop_path)
+      it.card.backdrop_path = it.backdrop_path;
+
+    if (it.id != null && it.shot_id == null) it.shot_id = it.id;
+    if (cid) it.id = cid;
+
+    if (it.card.type === "movie") {
+      it.card.title = it.card.title || it.card_title || it.title || "";
+      if (it.card.name) delete it.card.name;
+      if (it.name) delete it.name;
+
+      if (!it.card.release_date && it.card_year)
+        it.card.release_date = it.card_year + "-01-01";
+      if (it.card.first_air_date) delete it.card.first_air_date;
+    } else {
+      it.card.name = it.card.name || it.card_title || it.name || it.title || "";
+      if (it.card.title) delete it.card.title;
+
+      if (!it.name && it.card_title) it.name = it.card_title;
+
+      if (!it.card.first_air_date && it.card_year)
+        it.card.first_air_date = it.card_year + "-01-01";
+      if (it.card.release_date) delete it.card.release_date;
+    }
+  }
+
+  /** ---------------------------
+   * Row type detection
+   * -------------------------- */
+
+  function isTimetableRow(row) {
+    if (!row || !Array.isArray(row.results) || !row.results.length)
+      return false;
+    var r = row.results[0];
+    if (!r) return false;
+    return !!(
+      r.episode ||
+      (r.air_date && r.season_number != null && r.episode_number != null)
+    );
+  }
+
+  function isShotsRow(row) {
+    if (!row || !Array.isArray(row.results) || !row.results.length)
+      return false;
+
+    var t = String(row.title || row.name || "").toLowerCase();
+    if (t === "shots") return true;
+
+    var r = row.results[0];
+    return !!(r && r.screen && r.file && r.card_id);
+  }
+
+  /** ---------------------------
+   * Decorators
+   * -------------------------- */
+
+  function decorateTimetableRowReactive(rowNode, results) {
+    var root = rowNode && rowNode.jquery ? rowNode[0] : rowNode;
+    if (!root || !results || !results.length) return;
+
+    function run() {
+      var $root = $(root);
+      var $cards = $root.find(".card");
+      if (!$cards.length) return false;
+
+      $cards.each(function (i) {
+        var r = results[i];
+        if (!r) return;
+
+        var ep = r.episode || r;
+        var season = ep.season_number;
+        var episode = ep.episode_number;
+        var air = ep.air_date;
+
+        if (season == null || episode == null || !air) return;
+
+        var $card = $(this);
+        var $view = $card.find(".card__view");
+        if (!$view.length) $view = $card;
+
+        if ($view.find(".plugin-epmeta--episode").length) return;
+
+        $view.css("position", "relative");
+
+        var epTitle = (ep.name || "").trim() || "Эпизод " + episode;
+        var dateText = fmtDayMonth(air);
+
+        var $meta = $(
+          `<div class="plugin-epmeta plugin-epmeta--episode">
+            <div class="plugin-epmeta__ep"></div>
+            <div class="plugin-epmeta__date"></div>
+          </div>`
+        );
+
+        $meta.find(".plugin-epmeta__ep").text(epTitle);
+        $meta.find(".plugin-epmeta__date").text(dateText);
+
+        $view.append($meta);
+      });
+
+      return true;
+    }
+
+    if (run()) return;
+
+    if (typeof MutationObserver !== "undefined") {
+      var obs = new MutationObserver(function () {
+        run();
+      });
+      obs.observe(root, { childList: true, subtree: true });
+    } else {
+      setTimeout(run, 0);
+    }
+  }
+
+  function decorateShotsHeader($rowRoot) {
+    var $title = $rowRoot.find(".items-line__title").first();
+    if (!$title.length) $title = $rowRoot.find(".line__title").first();
+    if (!$title.length)
+      $title = $rowRoot.find(".interaction-line__title").first();
+    if (!$title.length) return;
+
+    if ($title.find(".full-person").length) return;
+
+    var $head = $(
+      `<div class="full-person layer--visible full-person--small full-person--loaded full-person--svg">
+        <div class="full-person__photo" style="background-color:#fff;color:rgb(253,69,24)">
+          <svg><use xlink:href="#sprite-shots"></use></svg>
+        </div>
+        <div class="full-person__body">
+          <div class="full-person__name">Shots</div>
+        </div>
+      </div>`
+    );
+
+    $title.empty().append($head);
+  }
+
+  function isShotItemLike(r) {
+    return !!(r && r.screen && r.file && r.card_id);
+  }
+
+  // пробуем вытащить объект данных из DOM, если вдруг row.results не обновляется/не совпадает
+  function tryGetShotDataFromDom(cardEl) {
+    try {
+      var $c = $(cardEl);
+      var d = $c.data && $c.data();
+      if (!d) return null;
+
+      // иногда объект лежит под ключом
+      for (var k in d) {
+        var v = d[k];
+        if (isShotItemLike(v)) return v;
+        if (v && v.card && isShotItemLike(v)) return v;
+      }
+
+      // или прямо в data()
+      if (isShotItemLike(d)) return d;
+    } catch (e) {}
+    return null;
+  }
+
+  function decorateShotCard($card, r) {
+    if (!r) return;
+
+    var $view = $card.find(".card__view");
+    if (!$view.length) $view = $card;
+
+    if ($view.find(".full-episode__shot-icon").length) return;
+
+    $view.css("position", "relative");
+
+    function tagsForShot(x) {
+      var list = [];
+      var type = String(
+        x.card_type || (x.card && x.card.type) || ""
+      ).toLowerCase();
+
+      var season = parseInt(x.season, 10);
+      var episode = parseInt(x.episode, 10);
+
+      var voiceRaw = (x.voice_name || "").trim();
+      var voice = voiceRaw ? voiceRaw.split(/\s+/)[0] : "Неизвестно";
+
+      if (type === "tv") {
+        if (season > 0) list.push("S-" + season);
+        if (episode > 0) list.push("E-" + episode);
+        list.push(voice);
+      } else {
+        list.push(voice);
+      }
+      return list;
+    }
+
+    var $icon = $(
+      `<div class="full-episode__shot-icon">
+        <svg><use xlink:href="#sprite-shots"></use></svg>
+      </div>`
+    );
+
+    var likeCount = r.liked == null ? 0 : r.liked;
+    var tags = tagsForShot(r);
+
+    var $tags = $('<div class="shots-tags"></div>');
+    for (var t = 0; t < tags.length; t++) {
+      $tags.append("<div>" + String(tags[t]) + "</div>");
+    }
+
+    var $liked = $(
+      `<div class="full-episode__liked">
+        <svg><use xlink:href="#sprite-love"></use></svg>
+        <span></span>
+      </div>`
+    );
+    $liked.find("span").text(String(likeCount));
+
+    var $meta = $('<div class="full-episode__date"></div>');
+    $meta.append($tags);
+    $meta.append($liked);
+
+    var $body = $('<div class="full-episode__body"></div>');
+    $body.append($meta);
+
+    $view.append($body);
+    $view.append($icon);
+  }
+
   /**
-   * =========================
-   *  New interface component
-   * =========================
+   * ✅ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ:
+   * decorateShotsRowReactive теперь НЕ отключает observer,
+   * и берет results ДИНАМИЧЕСКИ из row.results, поэтому новые карточки тоже декорируются.
    */
-  function component(object) {
+  function decorateShotsRowReactive(rowNode, row) {
+    var root = rowNode && rowNode.jquery ? rowNode[0] : rowNode;
+    if (!root || !row) return;
+
+    // не вешаем дважды
+    if (root.__shots_reactive_attached) return;
+    root.__shots_reactive_attached = true;
+
+    var scheduled = false;
+
+    function scheduleRun() {
+      if (scheduled) return;
+      scheduled = true;
+      setTimeout(function () {
+        scheduled = false;
+        run();
+      }, 0);
+    }
+
+    function run() {
+      var $root = $(root);
+
+      decorateShotsHeader($root);
+
+      var $cards = $root.find(".card");
+      if (!$cards.length) return;
+
+      var results = (row && row.results) || [];
+
+      $cards.each(function (i) {
+        var r = results[i] || tryGetShotDataFromDom(this);
+        if (!r) return;
+
+        // подстрахуем структуру
+        normalizeShotsThumb(r);
+
+        decorateShotCard($(this), r);
+      });
+    }
+
+    // первый прогон
+    scheduleRun();
+
+    if (typeof MutationObserver !== "undefined") {
+      var obs = new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++) {
+          if (muts[i] && muts[i].addedNodes && muts[i].addedNodes.length) {
+            scheduleRun();
+            return;
+          }
+        }
+      });
+
+      obs.observe(root, { childList: true, subtree: true });
+      root.__shots_obs = obs;
+    }
+  }
+
+  /** ---------------------------
+   * New interface component (main/category)
+   * -------------------------- */
+
+  function NewInterface(object) {
     var network = new Lampa.Reguest();
     var scroll = new Lampa.Scroll({
       mask: true,
@@ -482,15 +669,14 @@
 
     var items = [];
     var html = $(
-      '<div class="new-interface">' +
-        '<img class="full-start__background">' +
-        '<div class="full-start__overlay"></div>' +
-        "</div>"
+      `<div class="new-interface">
+        <img class="full-start__background">
+        <div class="full-start__overlay"></div>
+      </div>`
     );
 
     var active = 0;
     var newlampa = Lampa.Manifest.app_digital >= 166;
-
     var info;
     var lezydata;
 
@@ -502,7 +688,6 @@
     var background_last = "";
     var background_timer;
 
-    // Utils.createInstance emit compatibility
     this.emit = {};
     this.use = function (emit) {
       emit = emit || {};
@@ -548,9 +733,9 @@
 
     this.loadNext = function () {
       var _this = this;
-
       if (this.next && !this.next_wait && items.length) {
         this.next_wait = true;
+
         this.next(
           function (new_data) {
             _this.next_wait = false;
@@ -570,11 +755,10 @@
 
       lezydata = data;
 
-      info = new InfoPanel(object);
+      info = new InfoPanel();
       info.create();
 
       scroll.minus(info.render());
-
       data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
 
       html.append(info.render());
@@ -602,7 +786,7 @@
 
       var new_background = Lampa.Api.img(base.backdrop_path, "w1280");
       clearTimeout(background_timer);
-      if (new_background === background_last) return;
+      if (new_background == background_last) return;
 
       background_timer = setTimeout(function () {
         background_img.removeClass("loaded");
@@ -610,7 +794,6 @@
         background_img[0].onload = function () {
           background_img.addClass("loaded");
         };
-
         background_img[0].onerror = function () {
           background_img.removeClass("loaded");
         };
@@ -619,62 +802,57 @@
 
         setTimeout(function () {
           background_img[0].src = background_last;
-        }, 250);
-      }, 650);
+        }, 200);
+      }, 600);
     };
 
-    this.append = function (element) {
+    this.append = function (row) {
       var _this3 = this;
 
-      if (element.ready) return;
-      element.ready = true;
+      if (row.ready) return;
+      row.ready = true;
 
-      // normalize special rows
-      var timetable = isTimetableRow(element);
-      if (timetable && Array.isArray(element.results)) {
-        element.results.forEach(normalizeEpisodeThumb);
+      if (row && Array.isArray(row.results)) {
+        if (isTimetableRow(row)) {
+          row.results.forEach(function (r) {
+            normalizeEpisodeThumb(r);
+          });
+        } else if (isShotsRow(row)) {
+          row.results.forEach(function (r) {
+            normalizeShotsThumb(r);
+          });
+        }
       }
 
-      var shots = isShotsRow(element);
-      if (shots && Array.isArray(element.results)) {
-        element.results.forEach(normalizeShotsThumb);
-      }
-
-      var item = new Lampa.InteractionLine(element, {
-        url: element.url,
+      var item = new Lampa.InteractionLine(row, {
+        url: row.url,
         card_small: true,
-        cardClass: element.cardClass,
+        cardClass: row.cardClass,
         genres: object.genres,
         object: object,
         card_wide: true,
-        nomore: element.nomore,
+        nomore: row.nomore,
       });
 
-      // Some builds/plugins expect .use on row instance
       if (item && typeof item.use !== "function") {
         item.use = function (payload) {
           payload = payload || {};
           this._emit = this._emit || {};
           for (var k in payload) this._emit[k] = payload[k];
-
           if (typeof payload.onMore === "function")
             this.onMore = payload.onMore;
           if (typeof payload.onInstance === "function")
             this.onInstance = payload.onInstance;
           if (typeof payload.module !== "undefined")
             this.module = payload.module;
-
           return this;
         };
       }
 
-      // Let host inject hooks if any
       if (this.emit && typeof this.emit.onInstance === "function") {
         try {
-          this.emit.onInstance.call(this, item, element);
-        } catch (e) {
-          console.error(e);
-        }
+          this.emit.onInstance.call(this, item, row);
+        } catch (e) {}
       }
 
       item.create();
@@ -692,7 +870,6 @@
 
       item.onFocus = function (elem) {
         if (typeof prevFocus === "function") prevFocus(elem);
-
         var base = elem && elem.card ? elem.card : elem;
         info.update(base || {});
         _this3.background(elem || base || {});
@@ -700,23 +877,23 @@
 
       item.onHover = function (elem) {
         if (typeof prevHover === "function") prevHover(elem);
-
         var base = elem && elem.card ? elem.card : elem;
         info.update(base || {});
         _this3.background(elem || base || {});
       };
 
-      // ✅ fix: info.empty exists, but keep guard anyway
-      if (info && typeof info.empty === "function") {
-        item.onFocusMore = info.empty.bind(info);
-      }
+      item.onFocusMore = info.empty.bind(info);
 
       var rowNode = item.render();
       scroll.append(rowNode);
       items.push(item);
 
-      if (timetable) {
-        decorateTimetableRowReactive(rowNode, element.results);
+      if (row && Array.isArray(row.results)) {
+        if (isTimetableRow(row))
+          decorateTimetableRowReactive(rowNode, row.results);
+
+        // ✅ теперь передаем row целиком, чтобы row.results читались динамически
+        if (isShotsRow(row)) decorateShotsRowReactive(rowNode, row);
       }
     };
 
@@ -727,18 +904,14 @@
     this.down = function () {
       active++;
       active = Math.min(active, items.length - 1);
-
-      if (!viewall) {
+      if (!viewall)
         lezydata.slice(0, active + 2).forEach(this.append.bind(this));
-      }
-
       items[active].toggle();
       scroll.update(items[active].render());
     };
 
     this.up = function () {
       active--;
-
       if (active < 0) {
         active = 0;
         Lampa.Controller.toggle("head");
@@ -796,40 +969,72 @@
       scroll.destroy();
       if (info) info.destroy();
       html.remove();
-
       items = null;
       network = null;
       lezydata = null;
     };
   }
 
-  /**
-   * =========================
-   *  Plugin start
-   * =========================
-   */
+  /** ---------------------------
+   * Root screen check for createInstance patch
+   * -------------------------- */
+  function isRootScreenObject(el) {
+    if (!el || typeof el !== "object") return false;
+
+    if (!(el.source === "tmdb" || el.source === "cub")) return false;
+    if (!(el.component === "main" || el.component === "category")) return false;
+
+    if (window.innerWidth < 767) return false;
+    if (Lampa.Manifest.app_digital < 153) return false;
+
+    return true;
+  }
+
+  /** ---------------------------
+   * Plugin start
+   * -------------------------- */
   function startPlugin() {
+    if (window.plugin_interface_ready) return;
     window.plugin_interface_ready = true;
 
-    // Keep absolute URLs for posters/backdrops (Shots)
-    reactiveWrap(Lampa.Api, "img");
-    reactiveWrap(Lampa.TMDB, "image");
-    reactiveWrap(Lampa.TMDB, "img");
+    // ✅ патчим img-функции (и глобальный Api, если он есть)
+    function patchImgHolders() {
+      try {
+        if (window.Api && typeof window.Api.img === "function") {
+          window.Api.img = makeAbsUrlSafe(window.Api.img);
+        }
+      } catch (e) {}
 
-    reactiveWrapObject(Lampa, "TMDB", function (tmdb) {
-      reactiveWrap(tmdb, "image");
-      reactiveWrap(tmdb, "img");
+      try {
+        if (Lampa && Lampa.Api) reactiveWrap(Lampa.Api, "img");
+      } catch (e2) {}
+
+      try {
+        if (Lampa && Lampa.TMDB) {
+          reactiveWrap(Lampa.TMDB, "image");
+          reactiveWrap(Lampa.TMDB, "img");
+        }
+      } catch (e3) {}
+    }
+
+    patchImgHolders();
+
+    reactiveWrapObject(Lampa, "Api", function () {
+      patchImgHolders();
+    });
+    reactiveWrapObject(Lampa, "TMDB", function () {
+      patchImgHolders();
     });
 
-    reactiveWrapObject(Lampa, "Api", function (api) {
-      reactiveWrap(api, "img");
-    });
+    function patchCreateInstance(utils) {
+      if (!utils || typeof utils.createInstance !== "function") return;
 
-    // PR #281: replace via Utils.createInstance
-    if (Lampa.Utils && typeof Lampa.Utils.createInstance === "function") {
-      var originalCreateInstance = Lampa.Utils.createInstance;
+      if (utils.createInstance.__new_interface_patched) return;
+      utils.createInstance.__new_interface_patched = true;
 
-      Lampa.Utils.createInstance = function (
+      var original = utils.createInstance;
+
+      utils.createInstance = function (
         BaseClass,
         element,
         add_params,
@@ -839,131 +1044,91 @@
         add_params = add_params || {};
 
         if (isRootScreenObject(element)) {
-          add_params = Object.assign({}, add_params, {
-            createInstance: function () {
-              return new component(element);
-            },
-          });
+          add_params = extend({}, add_params);
+          add_params.createInstance = function (el) {
+            return new NewInterface(el);
+          };
           replace = true;
         }
 
-        return originalCreateInstance.call(
-          this,
-          BaseClass,
-          element,
-          add_params,
-          replace
-        );
-      };
-    } else {
-      // fallback for older Lampa
-      var old_interface = Lampa.InteractionMain;
-      var new_interface = component;
-
-      Lampa.InteractionMain = function (object) {
-        var use = new_interface;
-        if (!(object.source == "tmdb" || object.source == "cub"))
-          use = old_interface;
-        if (window.innerWidth < 767) use = old_interface;
-        if (Lampa.Manifest.app_digital < 153) use = old_interface;
-        return new use(object);
+        return original.call(this, BaseClass, element, add_params, replace);
       };
     }
 
-    // styles
+    if (Lampa.Utils && typeof Lampa.Utils.createInstance === "function") {
+      patchCreateInstance(Lampa.Utils);
+    } else {
+      reactiveWrapObject(Lampa, "Utils", function (utils) {
+        patchCreateInstance(utils);
+      });
+
+      var old = Lampa.InteractionMain;
+      Lampa.InteractionMain = function (obj) {
+        var use = NewInterface;
+        if (!(obj.source === "tmdb" || obj.source === "cub")) use = old;
+        if (window.innerWidth < 767) use = old;
+        if (Lampa.Manifest.app_digital < 153) use = old;
+        return new use(obj);
+      };
+    }
+
     Lampa.Template.add(
       "new_interface_style",
-      `
-      <style>
+      `<style>
         .new-interface .card--small.card--wide { width: 18.3em; }
-
         .new-interface-info { position: relative; padding: 1.5em; height: 24em; }
         .new-interface-info__body { width: 80%; padding-top: 1.1em; }
-        .new-interface-info__head { color: rgba(255,255,255,0.6); margin-bottom: 1em; font-size: 1.3em; min-height: 1em; }
+        .new-interface-info__head { color: rgba(255, 255, 255, 0.6); margin-bottom: 1em; font-size: 1.3em; min-height: 1em; }
         .new-interface-info__head span { color: #fff; }
-
-        .new-interface-info__title {
-          font-size: 4em; font-weight: 600; margin-bottom: 0.3em; overflow: hidden;
-          -o-text-overflow: "."; text-overflow: "."; display: -webkit-box;
-          -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical;
-          margin-left: -0.03em; line-height: 1.3;
-        }
-
-        .new-interface-info__details {
-          margin-bottom: 1.6em; display: flex; align-items: center; flex-wrap: wrap;
-          min-height: 1.9em; font-size: 1.1em;
-        }
-
+        .new-interface-info__title { font-size: 4em; font-weight: 600; margin-bottom: 0.3em; overflow: hidden; text-overflow: "."; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; margin-left: -0.03em; line-height: 1.3; }
+        .new-interface-info__details { margin-bottom: 1.6em; display: flex; align-items: center; flex-wrap: wrap; min-height: 1.9em; font-size: 1.1em; }
         .new-interface-info__split { margin: 0 1em; font-size: 0.7em; }
-
-        .new-interface-info__description {
-          font-size: 1.2em; font-weight: 300; line-height: 1.5; overflow: hidden;
-          -o-text-overflow: "."; text-overflow: "."; display: -webkit-box;
-          -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical;
-          width: 70%;
-        }
-
-        .new-interface .card-more__box { padding-bottom: 95%; }
+        .new-interface-info__description { font-size: 1.2em; font-weight: 300; line-height: 1.5; overflow: hidden; text-overflow: "."; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; width: 70%; }
         .new-interface .full-start__background { height: calc(100vh + 6em); top: -6em; }
-
-        .new-interface .full-start__overlay {
-          position: absolute;
-          width: 100%;
-          height: calc(100vh + 6em);
-          background: #0006; top: -6em;
-
-          width: 90vw;
-          background:
-            linear-gradient(to right,
-              rgba(0, 0, 0, 0.792) 0%,
-              rgba(0, 0, 0, 0.504) 50%,
-              rgba(0, 0, 0, 0.264) 70%,
-              rgba(0, 0, 0, 0.12) 80%,
-              rgba(0, 0, 0, 0) 100%
-            );
-        }
-
-        .new-interface .full-start__rate { font-size: 1.3em; margin-right: 0; }
+        .new-interface .full-start__overlay { position: absolute; width: 90vw; height: calc(100vh + 6em); top: -6em;
+          background: linear-gradient(to right, rgba(0,0,0,0.792) 0%, rgba(0,0,0,0.504) 50%, rgba(0,0,0,0.264) 70%, rgba(0,0,0,0.12) 80%, rgba(0,0,0,0) 100%); }
         .new-interface .card__promo { display: none; }
-        .new-interface .card.card--wide + .card-more .card-more__box { padding-bottom: 95%; }
         .new-interface .card.card--wide .card-watched { display: none !important; }
 
-        /* Episode overlay: only episode name + day/month */
-        .new-interface .plugin-epmeta--episode{
-          position:absolute;
-          left:0;
-          right:0;
-          bottom:0;
-          padding:0.6em 0.75em;
-          background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0));
-        }
-        .new-interface .plugin-epmeta--episode .plugin-epmeta__ep{
-          font-size: 1.05em;
-          font-weight: 700;
-          line-height: 1.15;
-          margin-bottom: 0.15em;
-        }
-        .new-interface .plugin-epmeta--episode .plugin-epmeta__date{
-          font-size: 0.95em;
-          line-height: 1.15;
-          opacity: 0.9;
-        }
+        .new-interface .plugin-epmeta--episode { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.6em 0.75em;
+          background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0)); }
+        .new-interface .plugin-epmeta--episode .plugin-epmeta__ep { font-size: 1.05em; font-weight: 700; line-height: 1.15; margin-bottom: 0.15em; }
+        .new-interface .plugin-epmeta--episode .plugin-epmeta__date { font-size: 0.95em; line-height: 1.15; opacity: 0.9; }
+
+        .new-interface .full-episode__shot-icon { position: absolute; top: 1em; left: 1em; z-index: 5; }
+        .new-interface .full-episode__shot-icon svg { width: 2em !important; height: 2em !important; }
+        .new-interface .full-episode__body { display: flex; background: linear-gradient(0, rgba(0,0,0,0.5) 0, rgba(0,0,0,0) 40%); }
+        .new-interface .full-episode__date { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; }
+        .new-interface .shots-tags { display: flex; flex-wrap: wrap; }
+        .new-interface .shots-tags > div { background: rgba(0,0,0,0.5); }
+        .new-interface .full-episode__liked { display: flex; align-items: center; gap: 0.35em; }
+        .new-interface .full-episode__liked svg { width: 1.05em; height: 1.05em; }
 
         body.light--version .new-interface-info__body { width: 69%; padding-top: 1.5em; }
         body.light--version .new-interface-info { height: 25.3em; }
-
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
-          animation: animation-card-focus 0.2s
-        }
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
-          animation: animation-trigger-enter 0.2s forwards
-        }
-      </style>
-      `
+      </style>`
     );
 
     $("body").append(Lampa.Template.get("new_interface_style", {}, true));
   }
 
-  if (!window.plugin_interface_ready) startPlugin();
+  if (window.Lampa) startPlugin();
+  else {
+    try {
+      var _l = window.Lampa;
+      Object.defineProperty(window, "Lampa", {
+        configurable: true,
+        enumerable: true,
+        get: function () {
+          return _l;
+        },
+        set: function (v) {
+          _l = v;
+          try {
+            startPlugin();
+          } catch (e) {}
+        },
+      });
+    } catch (e) {}
+  }
 })();
