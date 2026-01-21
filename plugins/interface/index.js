@@ -1,11 +1,8 @@
 (function () {
   "use strict";
 
-  /** ---------------------------
-   * Utils
-   * -------------------------- */
+  /** Utils */
 
-  // ✅ более корректная проверка абсолютности + поддержка протокол-relative
   function isAbsUrl(u) {
     return (
       typeof u === "string" &&
@@ -13,21 +10,17 @@
     );
   }
 
-  // ✅ фикс "двойного tmdb", и нормализация protocol-relative
   function normalizeAbsUrl(u) {
     if (typeof u !== "string") return u;
 
-    // https://image.tmdb.org/t/p/w300/https://video...  -> https://video...
     var m = u.match(
       /^(https?:\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i
     );
     if (m) return m[2];
 
-    // //image.tmdb.org/t/p/w300/https://video... -> https://video...
     m = u.match(/^(\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i);
     if (m) return m[2];
 
-    // protocol-relative -> absolute
     if (u.indexOf("//") === 0) return location.protocol + u;
 
     return u;
@@ -46,7 +39,6 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  // ✅ обертка для img-функций: если пришел абсолютный URL — не трогаем (и чиним double-tmdb)
   function makeAbsUrlSafe(fn) {
     if (typeof fn !== "function") return fn;
     if (fn.__abs_url_safe) return fn;
@@ -77,7 +69,7 @@
           cur = makeAbsUrlSafe(next);
         },
       });
-      obj[key] = obj[key]; // прогнать через setter
+      obj[key] = obj[key];
     } catch (e) {
       obj[key] = makeAbsUrlSafe(obj[key]);
     }
@@ -104,10 +96,171 @@
     } catch (e) {}
   }
 
-  /** ---------------------------
-   * Date formatting using Lampa localization
-   * Want: "8 Апреля"
-   * -------------------------- */
+  /** Shots opener */
+
+  function initShotsModule() {
+    const LABEL_RE = /^(shots|шоты)$/i;
+    const FN_KEYS = [
+      "onClick",
+      "onSelect",
+      "onEnter",
+      "callback",
+      "handler",
+      "action",
+      "run",
+    ];
+
+    function isShotsLabel(s) {
+      return typeof s === "string" && LABEL_RE.test(s.trim());
+    }
+
+    function findShotsMenuHandler() {
+      if (!window.Lampa || !Lampa.Menu) return null;
+
+      const menu = Lampa.Menu;
+      const seen = new Set();
+      const stack = [];
+
+      [
+        menu.buttons,
+        menu.items,
+        menu.list,
+        menu._buttons,
+        menu._items,
+        menu.menu,
+        menu,
+      ].forEach((v) => v && stack.push(v));
+
+      while (stack.length) {
+        const cur = stack.pop();
+        if (!cur) continue;
+
+        const t = typeof cur;
+        if (t !== "object" && t !== "function") continue;
+        if (seen.has(cur)) continue;
+        seen.add(cur);
+
+        if (Array.isArray(cur)) {
+          for (const it of cur) stack.push(it);
+          continue;
+        }
+
+        if (t === "object") {
+          const label =
+            cur.name ?? cur.title ?? cur.text ?? cur.label ?? cur.id;
+
+          if (isShotsLabel(label)) {
+            for (const k of FN_KEYS) {
+              if (typeof cur[k] === "function") return cur[k];
+            }
+          }
+
+          for (const k in cur) {
+            if (!Object.prototype.hasOwnProperty.call(cur, k)) continue;
+            const v = cur[k];
+            if (v && typeof v === "object") stack.push(v);
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function openShotsViaDomFallback() {
+      if (!window.$) return false;
+
+      const $btn = $(".selector")
+        .filter(function () {
+          const txt = (this.textContent || "").trim();
+          const dt = (this.getAttribute("data-title") || "").trim();
+          const dn = (this.getAttribute("data-name") || "").trim();
+          return isShotsLabel(txt) || isShotsLabel(dt) || isShotsLabel(dn);
+        })
+        .first();
+
+      if (!$btn.length) return false;
+
+      $btn.trigger("hover:enter");
+      $btn.trigger("click");
+
+      return true;
+    }
+
+    function openShotsLenta(opts) {
+      opts = opts || {};
+      const triesMax = Number.isFinite(opts.tries) ? opts.tries : 12;
+      const delay = Number.isFinite(opts.delay) ? opts.delay : 150;
+
+      let tries = 0;
+
+      function attempt() {
+        tries++;
+
+        try {
+          const fn = findShotsMenuHandler();
+          if (typeof fn === "function") {
+            fn();
+            return;
+          }
+
+          if (openShotsViaDomFallback()) return;
+        } catch (e) {
+          console.error("[ShotsLauncher] open error:", e);
+        }
+
+        if (tries < triesMax) return setTimeout(attempt, delay);
+
+        if (window.Lampa && Lampa.Bell) {
+          Lampa.Bell.push({
+            icon: '<svg><use xlink:href="#sprite-shots"></use></svg>',
+            text: "Shots: handler/button not found in menu (Shots plugin not loaded?)",
+          });
+        }
+      }
+
+      attempt();
+    }
+
+    window.ShotsLauncher = window.ShotsLauncher || {};
+    window.ShotsLauncher.open = openShotsLenta;
+
+    window.ShotsLauncher.bindMoreButton = function bindMoreButton(rowRoot) {
+      if (!rowRoot) return;
+
+      const btn =
+        rowRoot.querySelector(".items-line__more") ||
+        rowRoot.querySelector(".line__more") ||
+        rowRoot.querySelector(".items-more") ||
+        rowRoot.querySelector(".more");
+
+      if (!btn) return;
+
+      const handler = function (e) {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (_) {}
+        openShotsLenta();
+      };
+
+      btn.addEventListener("click", handler, true);
+
+      if (window.$)
+        $(btn)
+          .off("hover:enter.shots_open")
+          .on("hover:enter.shots_open", handler);
+    };
+  }
+
+  function openShotsViewer() {
+    if (!window.ShotsLauncher || typeof ShotsLauncher.open !== "function") {
+      initShotsModule();
+    }
+    ShotsLauncher.open();
+  }
+
+  /** Date formatting */
+
   function fmtDayMonth(iso) {
     if (!iso) return "";
     try {
@@ -137,10 +290,8 @@
     }
   }
 
-  /** ---------------------------
-   * Info panel (top)
-   * Fix: description disappearing with cached load
-   * -------------------------- */
+  /** Info panel */
+
   function InfoPanel() {
     var html;
     var timer;
@@ -303,9 +454,7 @@
     };
   }
 
-  /** ---------------------------
-   * Normalizers
-   * -------------------------- */
+  /** Normalizers */
 
   function normalizeEpisodeThumb(it) {
     if (!it) return;
@@ -391,9 +540,7 @@
     }
   }
 
-  /** ---------------------------
-   * Row type detection
-   * -------------------------- */
+  /** Row detection */
 
   function isTimetableRow(row) {
     if (!row || !Array.isArray(row.results) || !row.results.length)
@@ -417,9 +564,7 @@
     return !!(r && r.screen && r.file && r.card_id);
   }
 
-  /** ---------------------------
-   * Decorators
-   * -------------------------- */
+  /** Decorators */
 
   function decorateTimetableRowReactive(rowNode, results) {
     var root = rowNode && rowNode.jquery ? rowNode[0] : rowNode;
@@ -446,8 +591,6 @@
         if (!$view.length) $view = $card;
 
         if ($view.find(".plugin-epmeta--episode").length) return;
-
-        $view.css("position", "relative");
 
         var epTitle = (ep.name || "").trim() || "Эпизод " + episode;
         var dateText = fmtDayMonth(air);
@@ -507,21 +650,18 @@
     return !!(r && r.screen && r.file && r.card_id);
   }
 
-  // пробуем вытащить объект данных из DOM, если вдруг row.results не обновляется/не совпадает
   function tryGetShotDataFromDom(cardEl) {
     try {
       var $c = $(cardEl);
       var d = $c.data && $c.data();
       if (!d) return null;
 
-      // иногда объект лежит под ключом
       for (var k in d) {
         var v = d[k];
         if (isShotItemLike(v)) return v;
         if (v && v.card && isShotItemLike(v)) return v;
       }
 
-      // или прямо в data()
       if (isShotItemLike(d)) return d;
     } catch (e) {}
     return null;
@@ -535,8 +675,6 @@
 
     if ($view.find(".full-episode__shot-icon").length) return;
 
-    $view.css("position", "relative");
-
     function tagsForShot(x) {
       var list = [];
       var type = String(
@@ -546,15 +684,17 @@
       var season = parseInt(x.season, 10);
       var episode = parseInt(x.episode, 10);
 
-      var voiceRaw = (x.voice_name || "").trim();
-      var voice = voiceRaw ? voiceRaw.split(/\s+/)[0] : "Неизвестно";
+      var voice = (x.voice_name || "")
+        .split(/[\s|,|.]+/)[0]
+        .replace(/[\s][^a-zA-Zа-яА-Я0-9].*$/, "")
+        .trim();
 
       if (type === "tv") {
         if (season > 0) list.push("S-" + season);
         if (episode > 0) list.push("E-" + episode);
-        list.push(voice);
+        if (voice) list.push(voice);
       } else {
-        list.push(voice);
+        if (voice) list.push(voice);
       }
       return list;
     }
@@ -592,16 +732,10 @@
     $view.append($icon);
   }
 
-  /**
-   * ✅ КЛЮЧЕВОЕ ИЗМЕНЕНИЕ:
-   * decorateShotsRowReactive теперь НЕ отключает observer,
-   * и берет results ДИНАМИЧЕСКИ из row.results, поэтому новые карточки тоже декорируются.
-   */
   function decorateShotsRowReactive(rowNode, row) {
     var root = rowNode && rowNode.jquery ? rowNode[0] : rowNode;
     if (!root || !row) return;
 
-    // не вешаем дважды
     if (root.__shots_reactive_attached) return;
     root.__shots_reactive_attached = true;
 
@@ -630,14 +764,11 @@
         var r = results[i] || tryGetShotDataFromDom(this);
         if (!r) return;
 
-        // подстрахуем структуру
         normalizeShotsThumb(r);
-
         decorateShotCard($(this), r);
       });
     }
 
-    // первый прогон
     scheduleRun();
 
     if (typeof MutationObserver !== "undefined") {
@@ -655,9 +786,7 @@
     }
   }
 
-  /** ---------------------------
-   * New interface component (main/category)
-   * -------------------------- */
+  /** New interface component */
 
   function NewInterface(object) {
     var network = new Lampa.Reguest();
@@ -885,14 +1014,25 @@
       item.onFocusMore = info.empty.bind(info);
 
       var rowNode = item.render();
+
+      if (row && Array.isArray(row.results) && isShotsRow(row)) {
+        item.onMore = function () {
+          openShotsViewer();
+          return false;
+        };
+
+        try {
+          if (item && typeof item.use === "function")
+            item.use({ onMore: item.onMore });
+        } catch (e) {}
+      }
+
       scroll.append(rowNode);
       items.push(item);
 
       if (row && Array.isArray(row.results)) {
         if (isTimetableRow(row))
           decorateTimetableRowReactive(rowNode, row.results);
-
-        // ✅ теперь передаем row целиком, чтобы row.results читались динамически
         if (isShotsRow(row)) decorateShotsRowReactive(rowNode, row);
       }
     };
@@ -975,9 +1115,8 @@
     };
   }
 
-  /** ---------------------------
-   * Root screen check for createInstance patch
-   * -------------------------- */
+  /** Root screen check */
+
   function isRootScreenObject(el) {
     if (!el || typeof el !== "object") return false;
 
@@ -990,14 +1129,12 @@
     return true;
   }
 
-  /** ---------------------------
-   * Plugin start
-   * -------------------------- */
+  /** Plugin start */
+
   function startPlugin() {
     if (window.plugin_interface_ready) return;
     window.plugin_interface_ready = true;
 
-    // ✅ патчим img-функции (и глобальный Api, если он есть)
     function patchImgHolders() {
       try {
         if (window.Api && typeof window.Api.img === "function") {
@@ -1075,7 +1212,8 @@
     Lampa.Template.add(
       "new_interface_style",
       `<style>
-        .new-interface .card--small.card--wide { width: 18.3em; }
+        .new-interface .card__view { position: relative; }
+        .new-interface .card--small.card--wide { width: 19.6em; }
         .new-interface-info { position: relative; padding: 1.5em; height: 24em; }
         .new-interface-info__body { width: 80%; padding-top: 1.1em; }
         .new-interface-info__head { color: rgba(255, 255, 255, 0.6); margin-bottom: 1em; font-size: 1.3em; min-height: 1em; }
@@ -1091,14 +1229,14 @@
         .new-interface .card.card--wide .card-watched { display: none !important; }
 
         .new-interface .plugin-epmeta--episode { position: absolute; left: 0; right: 0; bottom: 0; padding: 0.6em 0.75em;
-          background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0)); }
+          background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0)); border-radius: 0 0 1em 1em; }
         .new-interface .plugin-epmeta--episode .plugin-epmeta__ep { font-size: 1.05em; font-weight: 700; line-height: 1.15; margin-bottom: 0.15em; }
         .new-interface .plugin-epmeta--episode .plugin-epmeta__date { font-size: 0.95em; line-height: 1.15; opacity: 0.9; }
 
         .new-interface .full-episode__shot-icon { position: absolute; top: 1em; left: 1em; z-index: 5; }
         .new-interface .full-episode__shot-icon svg { width: 2em !important; height: 2em !important; }
         .new-interface .full-episode__body { display: flex; background: linear-gradient(0, rgba(0,0,0,0.5) 0, rgba(0,0,0,0) 40%); }
-        .new-interface .full-episode__date { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; }
+        .new-interface .full-episode__date { display: flex; justify-content: space-between; align-items: center; gap: 0.3em; }
         .new-interface .shots-tags { display: flex; flex-wrap: wrap; }
         .new-interface .shots-tags > div { background: rgba(0,0,0,0.5); }
         .new-interface .full-episode__liked { display: flex; align-items: center; gap: 0.35em; }
