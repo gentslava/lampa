@@ -3,27 +3,13 @@
 
   /** Utils */
 
-  function isAbsUrl(u) {
+  function isAbsoluteUrl(url) {
     return (
-      typeof u === "string" &&
-      (/^(https?:)?\/\//i.test(u) || /^data:/i.test(u) || /^blob:/i.test(u))
+      typeof url === "string" &&
+      (url.indexOf("http://") === 0 ||
+        url.indexOf("https://") === 0 ||
+        url.indexOf("//") === 0)
     );
-  }
-
-  function normalizeAbsUrl(u) {
-    if (typeof u !== "string") return u;
-
-    var m = u.match(
-      /^(https?:\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i
-    );
-    if (m) return m[2];
-
-    m = u.match(/^(\/\/image\.tmdb\.org\/t\/p\/[^/]+\/)(https?:\/\/.+)$/i);
-    if (m) return m[2];
-
-    if (u.indexOf("//") === 0) return location.protocol + u;
-
-    return u;
   }
 
   function extend(dst, src) {
@@ -39,15 +25,13 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  function makeAbsUrlSafe(fn) {
+  function absUrlSafe(fn) {
     if (typeof fn !== "function") return fn;
     if (fn.__abs_url_safe) return fn;
 
-    function patched(path, size) {
-      if (typeof path === "string" && isAbsUrl(path)) {
-        return normalizeAbsUrl(path);
-      }
-      return fn.call(this, path, size);
+    function patched(path, ...args) {
+      if (isAbsoluteUrl(path)) return path;
+      return fn.call(this, path, ...args);
     }
 
     patched.__abs_url_safe = true;
@@ -57,21 +41,22 @@
 
   function reactiveWrap(obj, key) {
     if (!obj) return;
+    var wrapped = absUrlSafe(obj[key]);
+
     try {
-      var cur = makeAbsUrlSafe(obj[key]);
       Object.defineProperty(obj, key, {
         configurable: true,
         enumerable: true,
         get: function () {
-          return cur;
+          return wrapped;
         },
         set: function (next) {
-          cur = makeAbsUrlSafe(next);
+          wrapped = absUrlSafe(next);
         },
       });
-      obj[key] = obj[key];
+      wrapped = absUrlSafe(obj[key]);
     } catch (e) {
-      obj[key] = makeAbsUrlSafe(obj[key]);
+      obj[key] = wrapped;
     }
   }
 
@@ -1144,14 +1129,7 @@
 
       try {
         if (Lampa && Lampa.Api) reactiveWrap(Lampa.Api, "img");
-      } catch (e2) {}
-
-      try {
-        if (Lampa && Lampa.TMDB) {
-          reactiveWrap(Lampa.TMDB, "image");
-          reactiveWrap(Lampa.TMDB, "img");
-        }
-      } catch (e3) {}
+      } catch (e) {}
     }
 
     patchImgHolders();
@@ -1250,23 +1228,5 @@
     $("body").append(Lampa.Template.get("new_interface_style", {}, true));
   }
 
-  if (window.Lampa) startPlugin();
-  else {
-    try {
-      var _l = window.Lampa;
-      Object.defineProperty(window, "Lampa", {
-        configurable: true,
-        enumerable: true,
-        get: function () {
-          return _l;
-        },
-        set: function (v) {
-          _l = v;
-          try {
-            startPlugin();
-          } catch (e) {}
-        },
-      });
-    } catch (e) {}
-  }
+  startPlugin();
 })();
